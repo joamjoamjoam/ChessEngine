@@ -101,6 +101,7 @@ namespace ChessEngine
         public bool updateBoardForMove(String move)
         {
             bool moveValid = false;
+            bool kingInCheck = false;
             String fromPos = move.Substring(0, 2).ToUpper();
             String toPos = move.Substring(2, 2).ToUpper();
 
@@ -115,14 +116,123 @@ namespace ChessEngine
 
                     if (true) // Do check if move is valid for piece type
                     {
-                        if (toSpace.piece != null)
+                        if (fromPiece.GetType() == typeof(King) && ((King)fromPiece).canCastle && ((fromPiece.color == ChessmanColor.white && fromSpace.position.Item1 == 'E' && fromSpace.position.Item2 == 1 && (toSpace.position.Item1 == 'G' && toSpace.position.Item2 == 1) || (toSpace.position.Item1 == 'C' && toSpace.position.Item2 == 1)) || (fromPiece.color == ChessmanColor.black && fromSpace.position.Item1 == 'E' && fromSpace.position.Item2 == 8 && (toSpace.position.Item1 == 'G' && toSpace.position.Item2 == 8) || (toSpace.position.Item1 == 'C' && toSpace.position.Item2 == 8))))
                         {
-                            // We killed piece remove it.
+                            King kingPiece = ((King)fromPiece);
 
+                            //Attempting a castle VAlidate it
+                            BoardSpace rookSpace = null;
+
+                            if (kingPiece.color == ChessmanColor.white && (toSpace.position.Item1 == 'G' && toSpace.position.Item2 == 1))
+                            {
+                                // White King Side Castle
+                                rookSpace = getSpace('H', 1);
+
+                                if (rookSpace.piece.GetType() == typeof(Rook) && ((Rook)rookSpace.piece).canCastle) // Was the King Side Rook moved before now
+                                {
+                                    if (getSpace('F', 1).piece == null && getSpace('G', 1).piece == null) // Are all the spaces between the Rook and Knight Clear
+                                    {
+
+                                        if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check),F1, G1) (Skipping for now until we can check this)
+                                        {
+                                            movePieceOnBoard(fromSpace, toSpace); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('F', 1)); // Move Rook
+                                            moveValid = true;
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            else if (kingPiece.color == ChessmanColor.white && (toSpace.position.Item1 == 'C' && toSpace.position.Item2 == 1))
+                            {
+                                // White Queen Side Castle
+                                rookSpace = getSpace('A', 1);
+
+                                if (rookSpace.piece.GetType() == typeof(Rook) && ((Rook)rookSpace.piece).canCastle) // Was the King Side Rook moved before now
+                                {
+                                    if (getSpace('B', 1).piece == null && getSpace('C', 1).piece == null && getSpace('D', 1).piece == null) // Are all the spaces between the Rook and Knight Clear
+                                    {
+
+                                        if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check), D1, C1) (Skipping for now until we can check this)
+                                        {
+                                            movePieceOnBoard(fromSpace, toSpace); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('D', 1)); // Move Rook
+                                            moveValid = true;
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            else if (kingPiece.color == ChessmanColor.black && (toSpace.position.Item1 == 'G' && toSpace.position.Item2 == 8))
+                            {
+                                // White King Side Castle
+                                rookSpace = getSpace('H', 8);
+
+                                if (rookSpace.piece.GetType() == typeof(Rook) && ((Rook)rookSpace.piece).canCastle) // Was the King Side Rook moved before now
+                                {
+                                    if (getSpace('F', 8).piece == null && getSpace('G', 8).piece == null) // Are all the spaces between the Rook and Knight Clear
+                                    {
+
+                                        if (true) // Are any Spaces the King Must Move Under Attack. (E8(Check),F8, G8) (Skipping for now until we can check this)
+                                        {
+                                            movePieceOnBoard(fromSpace, toSpace); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('F', 8)); // Move Rook
+                                            moveValid = true;
+                                        }
+
+                                    }
+
+                                }
+                            }
+                            else if (kingPiece.color == ChessmanColor.black && (toSpace.position.Item1 == 'C' && toSpace.position.Item2 == 8))
+                            {
+                                // White Queen Side Castle
+                                rookSpace = getSpace('A', 8);
+
+                                if (rookSpace.piece.GetType() == typeof(Rook) && ((Rook)rookSpace.piece).canCastle) // Was the King Side Rook moved before now
+                                {
+                                    if (getSpace('B', 8).piece == null && getSpace('C', 8).piece == null && getSpace('D', 8).piece == null) // Are all the spaces between the Rook and Knight Clear
+                                    {
+                                        if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check), D1, C1) (Skipping for now until we can check this)
+                                        {
+                                            movePieceOnBoard(fromSpace, toSpace); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('D', 8)); // Move Rook
+                                            moveValid = true;
+
+                                            
+                                        }
+
+                                    }
+
+                                }
+                            }
+
+                            if (moveValid)
+                            {
+                                // Grab All King and Rooks for the color and disable castling
+                                foreach (BoardSpace s in boardState)
+                                {
+                                    if (s.piece != null && s.piece.color == fromPiece.color)
+                                    {
+                                        if (s.piece.GetType() == typeof(Rook))
+                                        {
+                                            ((Rook)s.piece).canCastle = false;
+                                        }
+                                        else if (s.piece.GetType() == typeof(King))
+                                        {
+                                            ((King)s.piece).canCastle = false;
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        fromPiece.position = toSpace;
-                        toSpace.piece = fromPiece;
-                        fromSpace.piece = null;
+                        else
+                        {
+                            movePieceOnBoard(fromSpace, toSpace);
+                            moveValid = true;
+                        }
                     }
 
                 }
@@ -140,6 +250,44 @@ namespace ChessEngine
 
 
             return moveValid;
+        }
+
+        private Chessman movePieceOnBoard(BoardSpace fromSpace, BoardSpace toSpace)
+        {
+            // This is kust updating the data model. Validation Should occur prior to this
+            // This function Assumes that the moves are valid.
+
+            Chessman fromPiece = fromSpace.piece;
+            Chessman killedPiece = null;
+
+            if (toSpace.piece != null)
+            {
+                // We killed piece remove it.
+                killedPiece = toSpace.piece;
+
+            }
+            fromPiece.position = toSpace;
+            toSpace.piece = fromPiece;
+            fromSpace.piece = null;
+
+            if (toSpace.piece.GetType() == typeof(King))
+            {
+                King kp = (King)toSpace.piece;
+                if (kp.canCastle)
+                {
+                    kp.canCastle = false;
+                }
+            }
+            else if (toSpace.piece.GetType() == typeof(Rook))
+            {
+                Rook rp = (Rook)toSpace.piece;
+                if (rp.canCastle)
+                {
+                    rp.canCastle = false;
+                }
+            }
+
+            return killedPiece;
         }
 
 

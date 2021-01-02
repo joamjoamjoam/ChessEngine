@@ -17,8 +17,11 @@ namespace ChessEngine
         public int score = -1;
         public ChessmanColor color = ChessmanColor.white;
 
+    
+
         public abstract void getAvailableMoves();
-        
+        public abstract bool isMoveValid(Board parentBoard, BoardSpace moveSpace);
+
     }
 
     public class Pawn : Chessman
@@ -32,6 +35,10 @@ namespace ChessEngine
         }
 
         public override void getAvailableMoves()
+        {
+            throw new NotImplementedException();
+        }
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
         {
             throw new NotImplementedException();
         }
@@ -62,6 +69,11 @@ namespace ChessEngine
             throw new NotImplementedException();
         }
 
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
             String rv = "n";
@@ -75,7 +87,7 @@ namespace ChessEngine
 
     public class Rook : Chessman
     {
-
+        public bool canCastle = true;
         public Rook(BoardSpace initPos, ChessmanColor color)
         {
             score = 500;
@@ -84,6 +96,11 @@ namespace ChessEngine
         }
 
         public override void getAvailableMoves()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
         {
             throw new NotImplementedException();
         }
@@ -114,6 +131,11 @@ namespace ChessEngine
             throw new NotImplementedException();
         }
 
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
             String rv = "b";
@@ -140,6 +162,11 @@ namespace ChessEngine
             throw new NotImplementedException();
         }
 
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
         {
             String rv = "q";
@@ -153,6 +180,8 @@ namespace ChessEngine
 
     public class King : Chessman
     {
+        public bool canCastle = true;
+        public bool inCheck = false;
 
         public King(BoardSpace initPos, ChessmanColor color)
         {
@@ -162,6 +191,11 @@ namespace ChessEngine
         }
 
         public override void getAvailableMoves()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
         {
             throw new NotImplementedException();
         }

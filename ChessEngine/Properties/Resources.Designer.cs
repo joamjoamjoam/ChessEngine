@@ -59,5 +59,15 @@ namespace ChessEngine.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap BlackKnight {
+            get {
+                object obj = ResourceManager.GetObject("BlackKnight", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
