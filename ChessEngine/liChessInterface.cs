@@ -361,7 +361,7 @@ namespace ChessEngine
             
             if (color == ChessmanColor.black)
             {
-                boardStr = "    | H | G | F | E | D | C | B | A |".ToLower() + Environment.NewLine;
+                boardStr = "   | H | G | F | E | D | C | B | A |".ToLower() + Environment.NewLine;
                 for (int row = 7; row >= 0; row--)
                 {
                     boardStr += $"{8-row}  |";
@@ -374,7 +374,7 @@ namespace ChessEngine
             }
             else if (color == ChessmanColor.white)
             {
-                boardStr = "    | A | B | C | D | E | F | G | H |".ToLower() + Environment.NewLine;
+                boardStr = "   | A | B | C | D | E | F | G | H |".ToLower() + Environment.NewLine;
                 for (int row = 0; row < 8; row++)
                 {
                     boardStr += $"{8 - row}  |";

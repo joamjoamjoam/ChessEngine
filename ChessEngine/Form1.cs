@@ -18,11 +18,10 @@ namespace ChessEngine
     {
         public Account currentAccount = null;
         private delegate void SafeCallDelegate();
-
+        public bool enableLegends = false;
 
 
         MyCheckBox[,] chessBoardList = new MyCheckBox[8, 8]; // Match BoardSpace model
-
         MyCheckBox[,] opBoardList = new MyCheckBox[8, 8]; // Match BoardSpace model
 
         public Form1()
@@ -30,7 +29,7 @@ namespace ChessEngine
             InitializeComponent();
 
             authTokenTxtBox.Text = "TzURxC7XfDjsGc5n";
-
+            Text = "LiChess Chess Engine";
 
         }
 
@@ -91,6 +90,22 @@ namespace ChessEngine
                     // Disable All Invalid moves
                 }
             }
+        }
+
+        private void opBoardSqaureCheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            if (cb.Checked)
+            {
+                cb.Checked = false;
+            }
+        }
+
+        private void opBoardSqaureGotFocus(object sender, EventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+
+            this.Focus();
         }
 
         private List<MyCheckBox> getSelectedSquareInChessBoard()
@@ -203,9 +218,9 @@ namespace ChessEngine
                 Game currGame = ((Game)b.Items[b.SelectedIndex]);
                 currGame.BoardUpdated += updateGUIAfterBoardChange;
                 currGame.startGameStream();
-                boardTextBox.Text = currGame.getBoard().printBoard(currGame.color);
+                Console.WriteLine(currGame.getBoard().printBoard(currGame.color));
 
-                boardTextBox.Text += Environment.NewLine + ((Game)b.Items[b.SelectedIndex]).getBoard().printBoard((currGame.color == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white) + Environment.NewLine;
+                Console.WriteLine(Environment.NewLine + ((Game)b.Items[b.SelectedIndex]).getBoard().printBoard((currGame.color == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white) + Environment.NewLine);
 
                 int yPos = 0;
                 int xPos = 0;
@@ -218,9 +233,8 @@ namespace ChessEngine
 
                 turnLbl.AutoSize = false;
                 turnLbl.Size = new Size((8 * cbXDim), turnLbl.Size.Height);
-                turnLbl.BackColor = Color.Red;
 
-                int initialXPos = boardTextBox.Location.X + boardTextBox.Width + edgeBuffer;
+                int initialXPos = gamesListBox.Location.X + gamesListBox.Width + edgeBuffer;
 
                 turnLbl.Location = new Point(initialXPos, turnLbl.Location.Y);
 
@@ -249,35 +263,47 @@ namespace ChessEngine
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
                             MyCheckBox cb = new MyCheckBox(tmp, effectiveRow);
-
+                            cb.GotFocus += opBoardSqaureGotFocus;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
                             cb.CheckedChanged += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
-                            if (col == 7 && effectiveRow == 8) // Use As Legend Corner
+                            bool legendPrinted = false;
+                            if (enableLegends)
                             {
-                                // Set Row Legends
-                                cb.Text = $"           {tmp.ToString().ToUpper()}           {effectiveRow}";
-                                cb.TextAlign = ContentAlignment.BottomLeft;
+                                if (col == 7 && effectiveRow == 8) // Use As Legend Corner
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{tmp.ToString().ToUpper()}{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                                else if (effectiveRow == 8) // Use As Legend
+                                {
+                                    // Set Column Legends
+                                    cb.Text = tmp.ToString().ToUpper();
+                                    cb.TextAlign = ContentAlignment.BottomCenter;
+                                    legendPrinted = true;
+                                }
+                                else if (col == 7) // Use As Legend
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
                             }
-                            else if (effectiveRow == 8) // Use As Legend
-                            {
-                                // Set Column Legends
-                                cb.Text = tmp.ToString().ToUpper();
-                                cb.TextAlign = ContentAlignment.BottomCenter;
-                            }
-                            else if (col == 7) // Use As Legend
-                            {
-                                // Set Row Legends
-                                cb.Text = $"{effectiveRow}";
-                                cb.TextAlign = ContentAlignment.BottomRight;
-                            }
-                            else
+                            if(!legendPrinted)
                             {
                                 cb.Text = cb.Name;
+                                cb.TextAlign = ContentAlignment.BottomRight;
+                                cb.Font = new Font(cb.Font.FontFamily, 8);
                             }
+                            
+                            
+
 
                             cb.Size = new Size(cbXDim, cbYDim);
                             cb.Location = new Point(xPos, yPos);
@@ -303,34 +329,43 @@ namespace ChessEngine
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
                             MyCheckBox cb = new MyCheckBox(tmp, row);
-
+                            cb.GotFocus += opBoardSqaureGotFocus;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
                             cb.CheckedChanged += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
-                            if (col == 0 && effectiveRow == 1) // Use As Legend Corner
+                            bool legendPrinted = false;
+                            if (enableLegends)
                             {
-                                // Set Row Legends
-                                cb.Text = $"{effectiveRow}           {tmp}";
-                                cb.TextAlign = ContentAlignment.BottomLeft;
+                                if (col == 0 && effectiveRow == 1) // Use As Legend Corner
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{tmp.ToString().ToUpper()}{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                                else if (effectiveRow == 1) // Use As Legend
+                                {
+                                    // Set Column Legends
+                                    cb.Text = tmp.ToString().ToUpper();
+                                    cb.TextAlign = ContentAlignment.BottomCenter;
+                                    legendPrinted = true;
+                                }
+                                else if (col == 0) // Use As Legend
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
                             }
-                            else if (effectiveRow == 1) // Use As Legend
-                            {
-                                // Set Column Legends
-                                cb.Text = tmp.ToString().ToUpper();
-                                cb.TextAlign = ContentAlignment.BottomCenter;
-                            }
-                            else if (col == 0) // Use As Legend
-                            {
-                                // Set Row Legends
-                                cb.Text = $"{effectiveRow}";
-                                cb.TextAlign = ContentAlignment.BottomLeft;
-                            }
-                            else
+                            if (!legendPrinted)
                             {
                                 cb.Text = cb.Name;
+                                cb.TextAlign = ContentAlignment.BottomRight;
+                                cb.Font = new Font(cb.Font.FontFamily, 8);
                             }
 
                             cb.Size = new Size(cbXDim, cbYDim);
@@ -338,11 +373,160 @@ namespace ChessEngine
 
                             Controls.Add(cb);
                             chessBoardList[row, col] = cb;
+                        }
+                    }
+                }
+
+
+
+                // Setup Opponents Board
+
+                yPos = 0;
+                xPos = 0;
+                edgeBuffer = 15;
+
+                initialXPos = edgeBuffer;
+
+                initialYPos = gamesListBox.Height + gamesListBox.Location.Y + edgeBuffer;
+
+                cbXDim = cbYDim = Math.Min((Size.Height - initialYPos - edgeBuffer)/8, (gamesListBox.Width - initialXPos) / 8);
+
+
+
+                if (!(currGame.color == ChessmanColor.black))
+                {
+
+                    for (int row = 7; row >= 0; row--)
+                    {
+
+                        // Initial Cb positon = 333x, 441y
+                        int effectiveRow = 8 - row;
+                        yPos = initialYPos + (cbYDim * (effectiveRow - 1));
+                        for (int col = 7; col >= 0; col--)
+                        {
+                            xPos = initialXPos + (col * cbXDim);
+                            Char tmp = (Char)('H' - col);
+
+                            //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
+
+                            MyCheckBox cb = new MyCheckBox(tmp, effectiveRow);
+
+                            cb.GotFocus += opBoardSqaureGotFocus;
+                            cb.CheckedChanged += opBoardSqaureCheckedChanged;
+                            cb.AutoSize = false;
+                            cb.Appearance = Appearance.Button;
+                            cb.ImageAlign = ContentAlignment.MiddleCenter;
+                            cb.CheckedChanged += boardSqaureCheckChanged;
+                            cb.Name = $"{tmp}{effectiveRow}";
+
+                            bool legendPrinted = false;
+                            if (enableLegends)
+                            {
+                                if (col == 7 && effectiveRow == 8) // Use As Legend Corner
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{tmp.ToString().ToUpper()}{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                                else if (effectiveRow == 8) // Use As Legend
+                                {
+                                    // Set Column Legends
+                                    cb.Text = tmp.ToString().ToUpper();
+                                    cb.TextAlign = ContentAlignment.BottomCenter;
+                                    legendPrinted = true;
+                                }
+                                else if (col == 7) // Use As Legend
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                            }
+                            if (!legendPrinted)
+                            {
+                                cb.Text = cb.Name;
+                                cb.TextAlign = ContentAlignment.BottomRight;
+                                cb.Font = new Font(cb.Font.FontFamily, 6);
+                            }
+
+                            cb.Size = new Size(cbXDim, cbYDim);
+                            cb.Location = new Point(xPos, yPos);
+
+                            cb.Enabled = false;
+
+                            Controls.Add(cb);
+                            opBoardList[row, col] = cb;
 
 
                         }
                     }
                 }
+                else
+                {
+                    for (int row = 0; row < 8; row++)
+                    {
+                        // Initial Cb positon = 333x, 441y
+                        yPos = initialYPos + (cbYDim * row);
+                        for (int col = 0; col < 8; col++)
+                        {
+                            xPos = initialXPos + (col * cbXDim);
+                            Char tmp = (Char)('A' + col);
+                            int effectiveRow = 8 - row;
+                            //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
+
+                            MyCheckBox cb = new MyCheckBox(tmp, row);
+                            cb.GotFocus += opBoardSqaureGotFocus;
+                            cb.CheckedChanged += opBoardSqaureCheckedChanged;
+                            cb.AutoSize = false;
+                            cb.Appearance = Appearance.Button;
+                            cb.ImageAlign = ContentAlignment.MiddleCenter;
+                            cb.CheckedChanged += boardSqaureCheckChanged;
+                            cb.Name = $"{tmp}{effectiveRow}";
+
+                            bool legendPrinted = false;
+                            if (enableLegends)
+                            {
+                                if (col == 0 && effectiveRow == 1) // Use As Legend Corner
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{tmp.ToString().ToUpper()}{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                                else if (effectiveRow == 1) // Use As Legend
+                                {
+                                    // Set Column Legends
+                                    cb.Text = tmp.ToString().ToUpper();
+                                    cb.TextAlign = ContentAlignment.BottomCenter;
+                                    legendPrinted = true;
+                                }
+                                else if (col == 0) // Use As Legend
+                                {
+                                    // Set Row Legends
+                                    cb.Text = $"{effectiveRow}";
+                                    cb.TextAlign = ContentAlignment.BottomRight;
+                                    legendPrinted = true;
+                                }
+                            }
+                            if (!legendPrinted)
+                            {
+                                cb.Text = cb.Name;
+                                cb.TextAlign = ContentAlignment.BottomRight;
+                                cb.Font = new Font(cb.Font.FontFamily, 6);
+                            }
+
+                            cb.Size = new Size(cbXDim, cbYDim);
+                            cb.Location = new Point(xPos, yPos);
+
+                            Controls.Add(cb);
+                            opBoardList[row, col] = cb;
+
+                        }
+                    }
+                }
+
                 updateGUIAfterBoardChange();
             }
         }
@@ -360,8 +544,8 @@ namespace ChessEngine
                 {
                     Game currGame = ((Game)gamesListBox.Items[gamesListBox.SelectedIndex]);
 
-                    boardTextBox.Text = currGame.getBoard().printBoard(currGame.color);
-                    boardTextBox.Text += Environment.NewLine + ((Game)gamesListBox.Items[gamesListBox.SelectedIndex]).getBoard().printBoard((currGame.color == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white) + Environment.NewLine;
+                    Console.WriteLine(currGame.getBoard().printBoard(currGame.color));
+                    Console.WriteLine(Environment.NewLine + ((Game)gamesListBox.Items[gamesListBox.SelectedIndex]).getBoard().printBoard((currGame.color == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white) + Environment.NewLine);
 
                     // Update ChessBoard GUI
 
@@ -412,7 +596,48 @@ namespace ChessEngine
                             }
                         }
 
-                        
+                        if (!(((Game)gamesListBox.SelectedItem).color == ChessmanColor.white))
+                        {
+                            for (int row = 0; row < 8; row++)
+                            {
+                                for (int col = 0; col < 8; col++)
+                                {
+                                    if (opBoardList[row, col] != null)
+                                    {
+                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
+                                        {
+                                            opBoardList[row, col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
+                                        }
+                                        else
+                                        {
+                                            opBoardList[row, col].Image = null;
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            for (int row = 7; row >= 0; row--)
+                            {
+                                for (int col = 7; col >= 0; col--)
+                                {
+                                    if (opBoardList[row, col] != null)
+                                    {
+                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
+                                        {
+                                            opBoardList[row, 7 - col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
+                                        }
+                                        else
+                                        {
+                                            opBoardList[row, 7 - col].Image = null;
+                                        }
+
+                                    }
+                                }
+                            }
+                        }
 
                         // Update Turn Label
                         turnLbl.Text = $"{((currGame.color == currGame.playerTurn) ? $"{currentAccount.username}'s" : $"{currGame.opponentName}'s")} ({CultureInfo.CurrentCulture.TextInfo.ToTitleCase(currGame.playerTurn.ToString().ToLower())}) Turn";
@@ -483,8 +708,8 @@ namespace ChessEngine
 
     public class MyCheckBox : CheckBox
     {
-        Color chessBoardDarkColor = Color.SteelBlue;
-        Color chessBoardLightColor = Color.LightSlateGray;
+        Color chessBoardDarkColor = Color.FromArgb(255, 0, 84, 229);
+        Color chessBoardLightColor = Color.Gray;
 
         public DateTime lastTimeSelected = DateTime.Now;
         public Color checkerBoardColor;

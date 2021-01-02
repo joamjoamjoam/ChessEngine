@@ -33,7 +33,6 @@
             this.getAcctInfo = new System.Windows.Forms.Button();
             this.gamesListBox = new System.Windows.Forms.ListBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.boardTextBox = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.executeUCITxtBox = new System.Windows.Forms.TextBox();
             this.executeUCIBtn = new System.Windows.Forms.Button();
@@ -43,15 +42,15 @@
             // 
             // authTokenTxtBox
             // 
-            this.authTokenTxtBox.Location = new System.Drawing.Point(94, 22);
+            this.authTokenTxtBox.Location = new System.Drawing.Point(94, 14);
             this.authTokenTxtBox.Name = "authTokenTxtBox";
-            this.authTokenTxtBox.Size = new System.Drawing.Size(231, 20);
+            this.authTokenTxtBox.Size = new System.Drawing.Size(161, 20);
             this.authTokenTxtBox.TabIndex = 0;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 25);
+            this.label1.Location = new System.Drawing.Point(14, 17);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(74, 13);
             this.label1.TabIndex = 1;
@@ -59,9 +58,9 @@
             // 
             // getAcctInfo
             // 
-            this.getAcctInfo.Location = new System.Drawing.Point(354, 22);
+            this.getAcctInfo.Location = new System.Drawing.Point(261, 12);
             this.getAcctInfo.Name = "getAcctInfo";
-            this.getAcctInfo.Size = new System.Drawing.Size(128, 23);
+            this.getAcctInfo.Size = new System.Drawing.Size(106, 23);
             this.getAcctInfo.TabIndex = 2;
             this.getAcctInfo.Text = "Load Account Info";
             this.getAcctInfo.UseVisualStyleBackColor = true;
@@ -70,33 +69,25 @@
             // gamesListBox
             // 
             this.gamesListBox.FormattingEnabled = true;
-            this.gamesListBox.Location = new System.Drawing.Point(17, 100);
+            this.gamesListBox.Location = new System.Drawing.Point(17, 102);
             this.gamesListBox.Name = "gamesListBox";
-            this.gamesListBox.Size = new System.Drawing.Size(232, 329);
+            this.gamesListBox.Size = new System.Drawing.Size(529, 186);
             this.gamesListBox.TabIndex = 3;
             this.gamesListBox.SelectedIndexChanged += new System.EventHandler(this.gamesListBox_SelectedIndexChanged);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(39, 81);
+            this.label2.Location = new System.Drawing.Point(182, 84);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(73, 13);
             this.label2.TabIndex = 4;
             this.label2.Text = "Active Games";
             // 
-            // boardTextBox
-            // 
-            this.boardTextBox.Location = new System.Drawing.Point(321, 100);
-            this.boardTextBox.Multiline = true;
-            this.boardTextBox.Name = "boardTextBox";
-            this.boardTextBox.Size = new System.Drawing.Size(236, 290);
-            this.boardTextBox.TabIndex = 5;
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(321, 397);
+            this.label3.Location = new System.Drawing.Point(18, 54);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(70, 13);
             this.label3.TabIndex = 6;
@@ -104,17 +95,17 @@
             // 
             // executeUCITxtBox
             // 
-            this.executeUCITxtBox.Location = new System.Drawing.Point(397, 394);
+            this.executeUCITxtBox.Location = new System.Drawing.Point(94, 51);
             this.executeUCITxtBox.Name = "executeUCITxtBox";
-            this.executeUCITxtBox.Size = new System.Drawing.Size(160, 20);
+            this.executeUCITxtBox.Size = new System.Drawing.Size(161, 20);
             this.executeUCITxtBox.TabIndex = 7;
             this.executeUCITxtBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.executeUCITxtBox_KeyDown);
             // 
             // executeUCIBtn
             // 
-            this.executeUCIBtn.Location = new System.Drawing.Point(397, 420);
+            this.executeUCIBtn.Location = new System.Drawing.Point(261, 49);
             this.executeUCIBtn.Name = "executeUCIBtn";
-            this.executeUCIBtn.Size = new System.Drawing.Size(160, 23);
+            this.executeUCIBtn.Size = new System.Drawing.Size(106, 23);
             this.executeUCIBtn.TabIndex = 8;
             this.executeUCIBtn.Text = "Execute";
             this.executeUCIBtn.UseVisualStyleBackColor = true;
@@ -150,7 +141,6 @@
             this.Controls.Add(this.executeUCIBtn);
             this.Controls.Add(this.executeUCITxtBox);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.boardTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.gamesListBox);
             this.Controls.Add(this.getAcctInfo);
@@ -171,7 +161,6 @@
         private System.Windows.Forms.Button getAcctInfo;
         private System.Windows.Forms.ListBox gamesListBox;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox boardTextBox;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox executeUCITxtBox;
         private System.Windows.Forms.Button executeUCIBtn;
