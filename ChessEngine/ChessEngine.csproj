@@ -7,7 +7,7 @@
     <ProjectGuid>{4D9358C6-F05F-4604-9668-A7952CBB9C5E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>ChessEngine</RootNamespace>
-    <AssemblyName>ChessEngine</AssemblyName>
+    <AssemblyName>MyChessEngine</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -89,6 +89,63 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\BlackKnight.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Black King.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackBishop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackKnight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackPawn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackQueen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackRook.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White Bishop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White King.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White Knight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White Pawn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White Queen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\White Rook.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhiteBishop.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhiteKing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhiteKnight.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhitePawn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhiteQueen.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WhiteRook.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlackKing.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

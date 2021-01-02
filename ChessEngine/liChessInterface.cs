@@ -85,6 +85,11 @@ namespace ChessEngine
             }
         }
 
+        public BoardSpace[,] getBoard()
+        {
+            return boardState;
+        }
+
         public Board(List<String> uciMovesList) : this()
         {
 
@@ -104,6 +109,12 @@ namespace ChessEngine
             bool kingInCheck = false;
             String fromPos = move.Substring(0, 2).ToUpper();
             String toPos = move.Substring(2, 2).ToUpper();
+            String extraArgs = "";
+
+            if (move.Length > 4)
+            {
+                extraArgs = move.Substring(4, move.Length - 4);
+            }
 
             try
             {
@@ -135,8 +146,8 @@ namespace ChessEngine
 
                                         if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check),F1, G1) (Skipping for now until we can check this)
                                         {
-                                            movePieceOnBoard(fromSpace, toSpace); // Move King
-                                            movePieceOnBoard(rookSpace, getSpace('F', 1)); // Move Rook
+                                            movePieceOnBoard(fromSpace, toSpace, extraArgs); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('F', 1), extraArgs); // Move Rook
                                             moveValid = true;
                                         }
 
@@ -156,8 +167,8 @@ namespace ChessEngine
 
                                         if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check), D1, C1) (Skipping for now until we can check this)
                                         {
-                                            movePieceOnBoard(fromSpace, toSpace); // Move King
-                                            movePieceOnBoard(rookSpace, getSpace('D', 1)); // Move Rook
+                                            movePieceOnBoard(fromSpace, toSpace, extraArgs); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('D', 1), extraArgs); // Move Rook
                                             moveValid = true;
                                         }
 
@@ -177,8 +188,8 @@ namespace ChessEngine
 
                                         if (true) // Are any Spaces the King Must Move Under Attack. (E8(Check),F8, G8) (Skipping for now until we can check this)
                                         {
-                                            movePieceOnBoard(fromSpace, toSpace); // Move King
-                                            movePieceOnBoard(rookSpace, getSpace('F', 8)); // Move Rook
+                                            movePieceOnBoard(fromSpace, toSpace, extraArgs); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('F', 8), extraArgs); // Move Rook
                                             moveValid = true;
                                         }
 
@@ -197,8 +208,8 @@ namespace ChessEngine
                                     {
                                         if (true) // Are any Spaces the King Must Move Under Attack. (E1(Check), D1, C1) (Skipping for now until we can check this)
                                         {
-                                            movePieceOnBoard(fromSpace, toSpace); // Move King
-                                            movePieceOnBoard(rookSpace, getSpace('D', 8)); // Move Rook
+                                            movePieceOnBoard(fromSpace, toSpace, extraArgs); // Move King
+                                            movePieceOnBoard(rookSpace, getSpace('D', 8), extraArgs); // Move Rook
                                             moveValid = true;
 
                                             
@@ -230,7 +241,7 @@ namespace ChessEngine
                         }
                         else
                         {
-                            movePieceOnBoard(fromSpace, toSpace);
+                            movePieceOnBoard(fromSpace, toSpace, extraArgs);
                             moveValid = true;
                         }
                     }
@@ -252,7 +263,7 @@ namespace ChessEngine
             return moveValid;
         }
 
-        private Chessman movePieceOnBoard(BoardSpace fromSpace, BoardSpace toSpace)
+        private Chessman movePieceOnBoard(BoardSpace fromSpace, BoardSpace toSpace, String extraArgs = "")
         {
             // This is kust updating the data model. Validation Should occur prior to this
             // This function Assumes that the moves are valid.
@@ -286,6 +297,40 @@ namespace ChessEngine
                     rp.canCastle = false;
                 }
             }
+            else if(toSpace.piece.GetType() == typeof(Pawn)){
+                if ((toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 1) || (toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 8))
+                {
+                    Char promotionType = 'q';
+                    if (extraArgs.Length > 0)
+                    {
+                        promotionType = extraArgs.ToLower()[0];
+                    }
+
+                    switch (promotionType)
+                    {
+                        case 'q':
+                            // Promote to Queen
+                            Queen q = new Queen(toSpace, toSpace.piece.color);
+                            toSpace.piece = q;
+                            break;
+                        case 'b':
+                            // Promote to Queen
+                            Bishop b = new Bishop(toSpace, toSpace.piece.color);
+                            toSpace.piece = b;
+                            break;
+                        case 'n':
+                            // Promote to Queen
+                            Knight kn = new Knight(toSpace, toSpace.piece.color);
+                            toSpace.piece = kn;
+                            break;
+                        case 'r':
+                            // Promote to Queen
+                            Rook r = new Rook(toSpace, toSpace.piece.color);
+                            toSpace.piece = r;
+                            break;
+                    }
+                }
+            }
 
             return killedPiece;
         }
@@ -306,16 +351,15 @@ namespace ChessEngine
 
             }
 
-
             return rv;
         }
 
 
-        public String printBoard(String color)
+        public String printBoard(ChessmanColor color)
         {
             String boardStr = "";
             
-            if (color.ToLower() == "black")
+            if (color == ChessmanColor.black)
             {
                 boardStr = "    | H | G | F | E | D | C | B | A |".ToLower() + Environment.NewLine;
                 for (int row = 7; row >= 0; row--)
@@ -328,7 +372,7 @@ namespace ChessEngine
                     boardStr += Environment.NewLine;
                 }
             }
-            else if (color.ToLower() == "white")
+            else if (color == ChessmanColor.white)
             {
                 boardStr = "    | A | B | C | D | E | F | G | H |".ToLower() + Environment.NewLine;
                 for (int row = 0; row < 8; row++)
@@ -377,6 +421,14 @@ namespace ChessEngine
             {
                 rv = "-";
             }
+
+            return rv;
+        }
+
+        public String getCoordinateString()
+        {
+            //return $"{position.Item1}{position.Item2}";
+            String rv = $"{position.Item1.ToString()}{position.Item2}";
 
             return rv;
         }
@@ -470,7 +522,7 @@ namespace ChessEngine
     {
         public readonly String fullId = "";
         public readonly String gameId = "";
-        public readonly String color = "";
+        public readonly ChessmanColor color = ChessmanColor.white;
         public readonly String lastMove = "";
         public readonly String opponentName = "";
         public readonly String opponentID = "";
@@ -481,6 +533,7 @@ namespace ChessEngine
         public String authToken = "";
         public WebClient client = new WebClient();
         public Task gameStreamTask = null;
+        public ChessmanColor playerTurn = ChessmanColor.white;
 
         // New Event for When a new Move is recieved. either UCI or from lichess
         public delegate void GameBoardUpdated();
@@ -493,7 +546,7 @@ namespace ChessEngine
                 fullId = (String)json["fullId"];
                 gameId = (String)json["gameId"];
                 lastMove = (String)json["lastMove"];
-                color = (String)json["color"];
+                color = (((String)json["color"]).ToLower() == "white") ? ChessmanColor.white : ChessmanColor.black;
 
                 opponentName = (String)((JObject)json["opponent"])["username"];
                 opponentID = (String)((JObject)json["opponent"])["id"];
@@ -547,6 +600,8 @@ namespace ChessEngine
                             if (msgType == "gameState")
                             {
                                 this.uciParser.executeUCIOperation($"position startpos moves {(String)json["moves"]}");
+                                int moveCount = ((String)json["moves"]).Split(new char[] { ' '}, StringSplitOptions.RemoveEmptyEntries).Count();
+                                playerTurn = (moveCount % 2 == 0) ? ChessmanColor.white : ChessmanColor.black;
                             }
                         }
                         catch

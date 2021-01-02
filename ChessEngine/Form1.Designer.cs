@@ -37,12 +37,13 @@
             this.label3 = new System.Windows.Forms.Label();
             this.executeUCITxtBox = new System.Windows.Forms.TextBox();
             this.executeUCIBtn = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.ChessBoardPlaceholder = new System.Windows.Forms.GroupBox();
+            this.turnLbl = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // authTokenTxtBox
             // 
-            this.authTokenTxtBox.Location = new System.Drawing.Point(106, 22);
+            this.authTokenTxtBox.Location = new System.Drawing.Point(94, 22);
             this.authTokenTxtBox.Name = "authTokenTxtBox";
             this.authTokenTxtBox.Size = new System.Drawing.Size(231, 20);
             this.authTokenTxtBox.TabIndex = 0;
@@ -50,7 +51,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(26, 25);
+            this.label1.Location = new System.Drawing.Point(14, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(74, 13);
             this.label1.TabIndex = 1;
@@ -58,7 +59,7 @@
             // 
             // getAcctInfo
             // 
-            this.getAcctInfo.Location = new System.Drawing.Point(366, 22);
+            this.getAcctInfo.Location = new System.Drawing.Point(354, 22);
             this.getAcctInfo.Name = "getAcctInfo";
             this.getAcctInfo.Size = new System.Drawing.Size(128, 23);
             this.getAcctInfo.TabIndex = 2;
@@ -69,7 +70,7 @@
             // gamesListBox
             // 
             this.gamesListBox.FormattingEnabled = true;
-            this.gamesListBox.Location = new System.Drawing.Point(29, 100);
+            this.gamesListBox.Location = new System.Drawing.Point(17, 100);
             this.gamesListBox.Name = "gamesListBox";
             this.gamesListBox.Size = new System.Drawing.Size(232, 329);
             this.gamesListBox.TabIndex = 3;
@@ -78,7 +79,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(51, 81);
+            this.label2.Location = new System.Drawing.Point(39, 81);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(73, 13);
             this.label2.TabIndex = 4;
@@ -86,16 +87,16 @@
             // 
             // boardTextBox
             // 
-            this.boardTextBox.Location = new System.Drawing.Point(333, 100);
+            this.boardTextBox.Location = new System.Drawing.Point(321, 100);
             this.boardTextBox.Multiline = true;
             this.boardTextBox.Name = "boardTextBox";
-            this.boardTextBox.Size = new System.Drawing.Size(455, 290);
+            this.boardTextBox.Size = new System.Drawing.Size(236, 290);
             this.boardTextBox.TabIndex = 5;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(333, 397);
+            this.label3.Location = new System.Drawing.Point(321, 397);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(70, 13);
             this.label3.TabIndex = 6;
@@ -103,42 +104,49 @@
             // 
             // executeUCITxtBox
             // 
-            this.executeUCITxtBox.Location = new System.Drawing.Point(409, 394);
+            this.executeUCITxtBox.Location = new System.Drawing.Point(397, 394);
             this.executeUCITxtBox.Name = "executeUCITxtBox";
-            this.executeUCITxtBox.Size = new System.Drawing.Size(278, 20);
+            this.executeUCITxtBox.Size = new System.Drawing.Size(160, 20);
             this.executeUCITxtBox.TabIndex = 7;
             this.executeUCITxtBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.executeUCITxtBox_KeyDown);
             // 
             // executeUCIBtn
             // 
-            this.executeUCIBtn.Location = new System.Drawing.Point(693, 392);
+            this.executeUCIBtn.Location = new System.Drawing.Point(397, 420);
             this.executeUCIBtn.Name = "executeUCIBtn";
-            this.executeUCIBtn.Size = new System.Drawing.Size(95, 23);
+            this.executeUCIBtn.Size = new System.Drawing.Size(160, 23);
             this.executeUCIBtn.TabIndex = 8;
             this.executeUCIBtn.Text = "Execute";
             this.executeUCIBtn.UseVisualStyleBackColor = true;
             this.executeUCIBtn.Click += new System.EventHandler(this.executeUCIBtn_Click);
             // 
-            // checkBox1
+            // ChessBoardPlaceholder
             // 
-            this.checkBox1.Appearance = System.Windows.Forms.Appearance.Button;
-            this.checkBox1.CausesValidation = false;
-            this.checkBox1.FlatAppearance.CheckedBackColor = System.Drawing.Color.Yellow;
-            this.checkBox1.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.checkBox1.Location = new System.Drawing.Point(333, 441);
-            this.checkBox1.MaximumSize = new System.Drawing.Size(100, 100);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(100, 100);
-            this.checkBox1.TabIndex = 9;
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.Visible = false;
+            this.ChessBoardPlaceholder.Location = new System.Drawing.Point(794, 81);
+            this.ChessBoardPlaceholder.Name = "ChessBoardPlaceholder";
+            this.ChessBoardPlaceholder.Size = new System.Drawing.Size(800, 800);
+            this.ChessBoardPlaceholder.TabIndex = 10;
+            this.ChessBoardPlaceholder.TabStop = false;
+            this.ChessBoardPlaceholder.Text = "groupBox1";
+            this.ChessBoardPlaceholder.Visible = false;
+            // 
+            // turnLbl
+            // 
+            this.turnLbl.AutoSize = true;
+            this.turnLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 36F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.turnLbl.Location = new System.Drawing.Point(1100, 9);
+            this.turnLbl.Name = "turnLbl";
+            this.turnLbl.Size = new System.Drawing.Size(0, 55);
+            this.turnLbl.TabIndex = 11;
+            this.turnLbl.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(877, 585);
-            this.Controls.Add(this.checkBox1);
+            this.ClientSize = new System.Drawing.Size(577, 466);
+            this.Controls.Add(this.turnLbl);
+            this.Controls.Add(this.ChessBoardPlaceholder);
             this.Controls.Add(this.executeUCIBtn);
             this.Controls.Add(this.executeUCITxtBox);
             this.Controls.Add(this.label3);
@@ -148,6 +156,7 @@
             this.Controls.Add(this.getAcctInfo);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.authTokenTxtBox);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -166,7 +175,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox executeUCITxtBox;
         private System.Windows.Forms.Button executeUCIBtn;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.GroupBox ChessBoardPlaceholder;
+        private System.Windows.Forms.Label turnLbl;
     }
 }
 
