@@ -9,6 +9,7 @@ namespace ChessEngine
 {
     public enum ChessmanColor
     {
+        none,
         white,
         black
     }
@@ -21,8 +22,8 @@ namespace ChessEngine
 
 
 
-        public abstract void getAvailableMoves();
-        public abstract bool isMoveValid(Board parentBoard, BoardSpace moveSpace);
+        public abstract List<Move> getAvailableMoves(Board boardState);
+        public abstract bool isMoveValid(Board parentBoard, Move move);
         public abstract Image getImage();
 
     }
@@ -41,11 +42,11 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackPawn;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -91,12 +92,12 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackKnight;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
 
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -141,12 +142,12 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackRook;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
 
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -190,12 +191,12 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackBishop;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
 
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -239,12 +240,12 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackQueen;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
 
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -291,12 +292,12 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackKing;
         }
 
-        public override void getAvailableMoves()
+        public override List<Move> getAvailableMoves(Board boardState)
         {
             throw new NotImplementedException();
         }
 
-        public override bool isMoveValid(Board parentBoard, BoardSpace moveSpace)
+        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }

@@ -9,14 +9,23 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Timers;
 
 namespace ChessEngine
 {
-    
+
 
 
     class ChessEngine
     {
+    }
+
+    public enum GameStatus
+    {
+        unknown,
+        started,
+        mate,
+        resign
     }
 
     public class Board
@@ -80,8 +89,8 @@ namespace ChessEngine
                     }
                 }
 
-                    
-                    
+
+
             }
         }
 
@@ -212,7 +221,7 @@ namespace ChessEngine
                                             movePieceOnBoard(rookSpace, getSpace('D', 8), extraArgs); // Move Rook
                                             moveValid = true;
 
-                                            
+
                                         }
 
                                     }
@@ -297,8 +306,8 @@ namespace ChessEngine
                     rp.canCastle = false;
                 }
             }
-            else if(toSpace.piece.GetType() == typeof(Pawn)){
-                if ((toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 1) || (toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 8))
+            else if (toSpace.piece.GetType() == typeof(Pawn)) {
+                if ((toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 1) || (toSpace.piece.color == ChessmanColor.white && toSpace.position.Item2 == 8))
                 {
                     Char promotionType = 'q';
                     if (extraArgs.Length > 0)
@@ -358,13 +367,13 @@ namespace ChessEngine
         public String printBoard(ChessmanColor color)
         {
             String boardStr = "";
-            
+
             if (color == ChessmanColor.black)
             {
                 boardStr = "   | H | G | F | E | D | C | B | A |".ToLower() + Environment.NewLine;
                 for (int row = 7; row >= 0; row--)
                 {
-                    boardStr += $"{8-row}  |";
+                    boardStr += $"{8 - row}  |";
                     for (int col = 7; col >= 0; col--)
                     {
                         boardStr += $" {boardState[row, col].ToString()} |";
@@ -390,6 +399,44 @@ namespace ChessEngine
         }
 
     };
+
+    public class Move{
+        public Board contextBoard = null;
+        public BoardSpace toSpace;
+        public BoardSpace fromSpace;
+        public Chessman piece;
+        public int score = 0;
+        
+
+        public Move(Chessman piece, BoardSpace fromSpace, BoardSpace toSpace, Board context, int score = 0)
+        {
+            contextBoard = context;
+            this.toSpace = toSpace;
+            this.fromSpace = fromSpace;
+            this.score = score; // AI Weight
+        }
+
+        public Move(String move, Board context, int score = 0, bool postMove = false)
+        {
+
+            if (Regex.IsMatch(move, "[A-Za-z][0-9][A-Za-z][0-9].*"))
+            {
+                contextBoard = context;
+                toSpace = contextBoard.getSpace(move.Substring(0, 1).ToString().ToUpper()[0], int.Parse(move.Substring(1, 1)));
+                fromSpace = contextBoard.getSpace(move.Substring(2, 1).ToString().ToUpper()[0], int.Parse(move.Substring(3, 1)));
+                this.score = score; // AI Weight
+                piece = (postMove) ? toSpace.piece : fromSpace.piece;
+            }
+            else
+            {
+                throw new Exception("Supplied Move is not UCI Formatted.");
+            }
+
+        }
+
+
+
+    }
 
     public class BoardSpace
     {
@@ -523,7 +570,6 @@ namespace ChessEngine
         public readonly String fullId = "";
         public readonly String gameId = "";
         public readonly ChessmanColor color = ChessmanColor.white;
-        public readonly String lastMove = "";
         public readonly String opponentName = "";
         public readonly String opponentID = "";
         public Board gameBoard = null;
@@ -534,18 +580,37 @@ namespace ChessEngine
         public WebClient client = new WebClient();
         public Task gameStreamTask = null;
         public ChessmanColor playerTurn = ChessmanColor.white;
+        public Move lastMove = null;
+        public GameStatus gameStatus = GameStatus.unknown;
+        public ChessmanColor winner = ChessmanColor.none;
+
+        public int whiteClockTime = 0;
+        public int blackClockTime = 0;
+
+        public Timer clockUpdateTimer = new Timer();
+        
 
         // New Event for When a new Move is recieved. either UCI or from lichess
         public delegate void GameBoardUpdated();
         public event GameBoardUpdated BoardUpdated;
 
+        public delegate void ClockTimeUpdated(Game sender, ChessmanColor color, int time);
+        public event ClockTimeUpdated clockStateUpdated;
+
+        public delegate void GameOverDelegate(Game sender, ChessmanColor color, GameStatus status);
+        public event GameOverDelegate GameOver;
+
+        private int tickInterval = 1000;
+
         public Game(JObject json, String authToken)
         {
             if (json != null)
             {
+                clockUpdateTimer.Interval = tickInterval;
+                clockUpdateTimer.Elapsed += clockTimerTick;
                 fullId = (String)json["fullId"];
                 gameId = (String)json["gameId"];
-                lastMove = (String)json["lastMove"];
+
                 color = (((String)json["color"]).ToLower() == "white") ? ChessmanColor.white : ChessmanColor.black;
 
                 opponentName = (String)((JObject)json["opponent"])["username"];
@@ -565,6 +630,10 @@ namespace ChessEngine
                 {
                     gameBoard = new Board();
                 }
+                if (json.ContainsKey("lastMove") && ((String)json["lastMove"]).Trim() != "")
+                {
+                    lastMove = new Move((String)json["lastMove"], gameBoard, postMove: true); lastMove = new Move((String)json["lastMove"], gameBoard, postMove: true);
+                }
             }
         }
 
@@ -574,12 +643,44 @@ namespace ChessEngine
             {
                 gameStreamTask = new Task(new Action(gameStateStreamHandler));
                 gameStreamTask.Start();
+
             }
+        }
+
+        public void clockTimerTick(object sender, EventArgs e)
+        {
+            if (whiteClockTime > 0 && blackClockTime > 0)
+            {
+                if (playerTurn == ChessmanColor.white)
+                {
+                    whiteClockTime -= tickInterval;
+                }
+                else
+                {
+                    blackClockTime -= tickInterval;
+                }
+
+                if (clockStateUpdated != null)
+                {
+                    clockStateUpdated(this, playerTurn, (playerTurn == ChessmanColor.white) ? whiteClockTime : blackClockTime);
+                }
+            }
+
         }
 
         public void stopGameStream()
         {
             // add cancellation token here
+        }
+
+        private void handleGameOver()
+        {
+            clockUpdateTimer.Stop();
+            if (GameOver != null)
+            {
+                GameOver(this, winner, gameStatus);
+            }
+            
         }
 
         private void gameStateStreamHandler()
@@ -592,17 +693,91 @@ namespace ChessEngine
                     String tmp = reader.ReadLine();
                     if (tmp != "")
                     {
-                        Debug.WriteLine(tmp);
+                        Console.WriteLine(tmp);
                         JObject json = JObject.Parse(tmp);
-                        String msgType = (String)json["type"];
+                        String msgType = (!json.ContainsKey("type")) ? null : $"{(String)json["type"]}";
+
                         try
                         {
+
                             if (msgType == "gameState")
                             {
                                 this.uciParser.executeUCIOperation($"position startpos moves {(String)json["moves"]}");
-                                int moveCount = ((String)json["moves"]).Split(new char[] { ' '}, StringSplitOptions.RemoveEmptyEntries).Count();
+                                int moveCount = ((String)json["moves"]).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Count();
                                 playerTurn = (moveCount % 2 == 0) ? ChessmanColor.white : ChessmanColor.black;
+
+                                if (moveCount > 0)
+                                {
+                                    lastMove = new Move(((String)json["moves"]).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[moveCount - 1], gameBoard, postMove: true);
+                                }
+                                whiteClockTime = int.Parse((String)(json["wtime"]));
+                                blackClockTime = int.Parse((String)(json["btime"]));
+                                if (clockStateUpdated != null)
+                                {
+                                    clockStateUpdated(this, ChessmanColor.white, whiteClockTime);
+                                    clockStateUpdated(this, ChessmanColor.black, blackClockTime);
+                                }
+                                if (json.ContainsKey("status"))
+                                {
+                                    GameStatus sts = GameStatus.unknown;
+                                    if (Enum.TryParse(((String)json["status"]), true, out sts))
+                                    {
+                                        gameStatus = sts;
+                                    }
+                                    else
+                                    {
+                                        gameStatus = GameStatus.unknown;
+                                    }
+                                }
+                                if (json.ContainsKey("winner"))
+                                {
+                                    winner = (((String)json["winner"]) == "white") ? ChessmanColor.white : ChessmanColor.black;
+                                    handleGameOver();
+                                }
                             }
+                            else if(msgType == "gameFull")
+                            {
+                                // Is Inital State Message
+                                whiteClockTime = int.Parse((String)(((JObject)(json["state"]))["wtime"]));
+                                blackClockTime = int.Parse((String)(((JObject)(json["state"]))["btime"]));
+                                int moveCount = ((String)(((JObject)(json["state"]))["moves"])).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Count();
+                                if (moveCount > 0)
+                                {
+                                    lastMove = new Move(((String)(((JObject)(json["state"]))["moves"])).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[moveCount-1], gameBoard, postMove: true); 
+                                }
+                                
+                                playerTurn = (moveCount % 2 == 0) ? ChessmanColor.white : ChessmanColor.black;
+
+                                if (clockStateUpdated != null)
+                                {
+                                    clockStateUpdated(this, ChessmanColor.white, whiteClockTime);
+                                    clockStateUpdated(this, ChessmanColor.black, blackClockTime);
+                                }
+
+                                if (json.ContainsKey("status"))
+                                {
+                                    GameStatus sts = GameStatus.unknown;
+                                    if (Enum.TryParse(((String)(((JObject)(json["state"]))["status"])), true, out sts))
+                                    {
+                                        gameStatus = sts;
+                                    }
+                                    else
+                                    {
+                                        gameStatus = GameStatus.unknown;
+                                    }
+                                }
+                                if (json.ContainsKey("winner"))
+                                {
+                                    winner = (((String)json["winner"]) == "white") ? ChessmanColor.white : ChessmanColor.black;
+                                    handleGameOver();
+                                }
+
+                            }
+                            
+                            clockUpdateTimer.Start();
+                            clockUpdateTimer.Enabled = true;
+
+
                         }
                         catch
                         {
@@ -735,6 +910,7 @@ namespace ChessEngine
                     foreach (JObject gameObj in ((JArray)gamesObj["nowPlaying"]))
                     {
                         Game tmp = new Game(gameObj, authToken);
+                        
                         if (tmp != null)
                         {
                             currentGames.Add(tmp);

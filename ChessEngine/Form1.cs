@@ -18,6 +18,7 @@ namespace ChessEngine
     {
         public Account currentAccount = null;
         private delegate void SafeCallDelegate();
+        private delegate void ClockUpdateDelegate(Game sender, ChessmanColor color, int time);
         public bool enableLegends = false;
 
 
@@ -30,6 +31,13 @@ namespace ChessEngine
 
             authTokenTxtBox.Text = "TzURxC7XfDjsGc5n";
             Text = "LiChess Chess Engine";
+
+            oppClockNameLbl.Text = "";
+            oppClockTimeLbl.Text = "";
+            oppBoardNameLbl.Text = "";
+
+            playerClockNameLbl.Text = "";
+            playerClockTimeLbl.Text = "";
 
         }
 
@@ -130,6 +138,48 @@ namespace ChessEngine
             return rv;
         }
 
+        private void clockStateUpdated(Game sender, ChessmanColor color, int time)
+        {
+            if (this.InvokeRequired)
+            {
+                ClockUpdateDelegate d = new ClockUpdateDelegate(clockStateUpdated);
+                this.Invoke(d, new object[] { sender, color, time});
+            }
+            else
+            {
+                TimeSpan span = TimeSpan.FromMilliseconds(time);
+
+                String timeStr = $"{((span.Hours != 0) ? $"{span.Hours.ToString("D2")}:" : "")}{((span.Minutes != 0 || span.Hours != 0 ) ? $"{(span.Minutes.ToString("D2"))}:" : "")}{((span.Seconds != 0 || (span.Minutes != 0 || span.Hours != 0)) ? $"{span.Seconds.ToString("D2")}" : "")}";
+
+                if (span.TotalMilliseconds == 0)
+                {
+                    timeStr = "00:00:00";
+                }
+
+                if (color == ChessmanColor.white)
+                {
+                    if (sender.color == ChessmanColor.white)
+                    {
+                        playerClockTimeLbl.Text = timeStr;
+                    }
+                    else
+                    {
+                        oppClockTimeLbl.Text = timeStr;
+                    }
+                }
+                else
+                {
+                    if (sender.color == ChessmanColor.black)
+                    {
+                        playerClockTimeLbl.Text = timeStr;
+                    }
+                    else
+                    {
+                        oppClockTimeLbl.Text = timeStr;
+                    }
+                }
+            }
+        }
 
 
         private void getAcctInfo_Click(object sender, EventArgs e)
@@ -216,11 +266,22 @@ namespace ChessEngine
             {
 
                 Game currGame = ((Game)b.Items[b.SelectedIndex]);
+                currGame.clockStateUpdated += clockStateUpdated;
                 currGame.BoardUpdated += updateGUIAfterBoardChange;
+                currGame.GameOver += gameHasEnded;
                 currGame.startGameStream();
                 Console.WriteLine(currGame.getBoard().printBoard(currGame.color));
 
                 Console.WriteLine(Environment.NewLine + ((Game)b.Items[b.SelectedIndex]).getBoard().printBoard((currGame.color == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white) + Environment.NewLine);
+
+                // Set Opponent Board and Clock Labels
+                oppBoardNameLbl.Text = $"{currGame.opponentName}'s Board";
+                oppClockNameLbl.Text = $"{currGame.opponentName}'s Clock";
+                playerClockNameLbl.Text = $"{currentAccount.username}'s Clock";
+
+                oppClockTimeLbl.Location = new Point(playerClockTimeLbl.Location.X,oppClockTimeLbl.Location.Y);
+
+                oppClockTimeLbl.Width = playerClockTimeLbl.Width = Math.Max(oppClockNameLbl.Width, playerClockNameLbl.Width);
 
                 int yPos = 0;
                 int xPos = 0;
@@ -234,7 +295,7 @@ namespace ChessEngine
                 turnLbl.AutoSize = false;
                 turnLbl.Size = new Size((8 * cbXDim), turnLbl.Size.Height);
 
-                int initialXPos = gamesListBox.Location.X + gamesListBox.Width + edgeBuffer;
+                int initialXPos = oppClockNameLbl.Location.X + Math.Max(oppClockNameLbl.Width, playerClockNameLbl.Width) + edgeBuffer;
 
                 turnLbl.Location = new Point(initialXPos, turnLbl.Location.Y);
 
@@ -387,9 +448,11 @@ namespace ChessEngine
 
                 initialXPos = edgeBuffer;
 
-                initialYPos = gamesListBox.Height + gamesListBox.Location.Y + edgeBuffer;
+                initialYPos = oppBoardNameLbl.Height + oppBoardNameLbl.Location.Y + edgeBuffer;
 
-                cbXDim = cbYDim = Math.Min((Size.Height - initialYPos - edgeBuffer)/8, (gamesListBox.Width - initialXPos) / 8);
+                cbXDim = cbYDim = Math.Min((Size.Height - initialYPos - edgeBuffer)/8, (oppClockNameLbl.Location.X + (Math.Max(oppClockNameLbl.Width, playerClockNameLbl.Width) - initialXPos - 2*edgeBuffer)) / 8);
+
+                oppBoardNameLbl.Width = 8 * cbXDim;
 
 
 
@@ -453,8 +516,6 @@ namespace ChessEngine
 
                             cb.Size = new Size(cbXDim, cbYDim);
                             cb.Location = new Point(xPos, yPos);
-
-                            cb.Enabled = false;
 
                             Controls.Add(cb);
                             opBoardList[row, col] = cb;
@@ -540,7 +601,7 @@ namespace ChessEngine
             }
             else
             {
-                if (gamesListBox.SelectedIndex != -1)
+                if (gamesListBox.SelectedIndex >= 0)
                 {
                     Game currGame = ((Game)gamesListBox.Items[gamesListBox.SelectedIndex]);
 
@@ -550,103 +611,170 @@ namespace ChessEngine
                     // Update ChessBoard GUI
 
                     Board board = ((Game)gamesListBox.SelectedItem).gameBoard;
-
-                    if (gamesListBox.SelectedIndex >= 0)
+                    if (((Game)gamesListBox.SelectedItem).color == ChessmanColor.white)
                     {
-                        if (((Game)gamesListBox.SelectedItem).color == ChessmanColor.white)
+                        for (int row = 0; row < 8; row++)
                         {
-                            for (int row = 0; row < 8; row++)
+                            for (int col = 0; col < 8; col++)
                             {
-                                for (int col = 0; col < 8; col++)
+                                if (chessBoardList[row, col] != null)
                                 {
-                                    if (chessBoardList[row, col] != null)
+                                    if (currGame.gameBoard.getBoard()[row, col].piece != null)
                                     {
-                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
-                                        {
-                                            chessBoardList[row, col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), chessBoardList[row, col].Size.Width / 2, chessBoardList[row, col].Size.Height / 2);
-                                        }
-                                        else
-                                        {
-                                            chessBoardList[row, col].Image = null;
-                                        }
-
+                                        chessBoardList[row, col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), chessBoardList[row, col].Size.Width / 2, chessBoardList[row, col].Size.Height / 2);
                                     }
+                                    else
+                                    {
+                                        chessBoardList[row, col].Image = null;
+                                    }
+
                                 }
                             }
+                        }
+                    }
+                    else
+                    {
+                        for (int row = 7; row >= 0; row--)
+                        {
+                            for (int col = 7; col >= 0; col--)
+                            {
+                                if (chessBoardList[row, col] != null)
+                                {
+                                    if (currGame.gameBoard.getBoard()[row, col].piece != null)
+                                    {
+                                        chessBoardList[row, 7-col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), chessBoardList[row, col].Size.Width / 2, chessBoardList[row, col].Size.Height / 2);
+                                    }
+                                    else
+                                    {
+                                        chessBoardList[row, 7-col].Image = null;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    if (!(((Game)gamesListBox.SelectedItem).color == ChessmanColor.white))
+                    {
+                        for (int row = 0; row < 8; row++)
+                        {
+                            for (int col = 0; col < 8; col++)
+                            {
+                                if (opBoardList[row, col] != null)
+                                {
+                                    if (currGame.gameBoard.getBoard()[row, col].piece != null)
+                                    {
+                                        opBoardList[row, col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
+                                    }
+                                    else
+                                    {
+                                        opBoardList[row, col].Image = null;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int row = 7; row >= 0; row--)
+                        {
+                            for (int col = 7; col >= 0; col--)
+                            {
+                                if (opBoardList[row, col] != null)
+                                {
+                                    if (currGame.gameBoard.getBoard()[row, col].piece != null)
+                                    {
+                                        opBoardList[row, 7 - col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
+                                    }
+                                    else
+                                    {
+                                        opBoardList[row, 7 - col].Image = null;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    // Update Turn Label
+                    turnLbl.Text = $"{((currGame.color == currGame.playerTurn) ? $"{currentAccount.username}'s" : $"{currGame.opponentName}'s")} ({CultureInfo.CurrentCulture.TextInfo.ToTitleCase(currGame.playerTurn.ToString().ToLower())}) Turn";
+
+                    // Select last Move
+                    if (currGame.lastMove != null && currGame.color == currGame.playerTurn)
+                    {
+                        if (false) // castles
+                        {
+
                         }
                         else
                         {
-                            for (int row = 7; row >= 0; row--)
+                            MyCheckBox check = getCheckBoxForChessPosition(currGame.lastMove.toSpace.position.Item1, currGame.lastMove.toSpace.position.Item2, chessBoardList);
+                            if (check != null)
                             {
-                                for (int col = 7; col >= 0; col--)
-                                {
-                                    if (chessBoardList[row, col] != null)
-                                    {
-                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
-                                        {
-                                            chessBoardList[row, 7-col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), chessBoardList[row, col].Size.Width / 2, chessBoardList[row, col].Size.Height / 2);
-                                        }
-                                        else
-                                        {
-                                            chessBoardList[row, 7-col].Image = null;
-                                        }
+                                check.checkerBoardColor = MyCheckBox.chessBoardLastMoveColor;
+                                check.BackColor = check.checkerBoardColor;
+                            }
 
-                                    }
-                                }
+                            check = getCheckBoxForChessPosition(currGame.lastMove.fromSpace.position.Item1, currGame.lastMove.fromSpace.position.Item2, chessBoardList);
+                            if (check != null)
+                            {
+                                check.checkerBoardColor = MyCheckBox.chessBoardLastMoveColor;
+                                check.BackColor = check.checkerBoardColor;
                             }
                         }
+                    }
+                    else
+                    {
+                        resetCheckBoxDefaultColors();
+                    }
+                }
+            }
 
-                        if (!(((Game)gamesListBox.SelectedItem).color == ChessmanColor.white))
-                        {
-                            for (int row = 0; row < 8; row++)
-                            {
-                                for (int col = 0; col < 8; col++)
-                                {
-                                    if (opBoardList[row, col] != null)
-                                    {
-                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
-                                        {
-                                            opBoardList[row, col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
-                                        }
-                                        else
-                                        {
-                                            opBoardList[row, col].Image = null;
-                                        }
+        }
 
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (int row = 7; row >= 0; row--)
-                            {
-                                for (int col = 7; col >= 0; col--)
-                                {
-                                    if (opBoardList[row, col] != null)
-                                    {
-                                        if (currGame.gameBoard.getBoard()[row, col].piece != null)
-                                        {
-                                            opBoardList[row, 7 - col].Image = resizeImage(currGame.gameBoard.getBoard()[row, col].piece.getImage(), opBoardList[row, col].Size.Width / 2, opBoardList[row, col].Size.Height / 2);
-                                        }
-                                        else
-                                        {
-                                            opBoardList[row, 7 - col].Image = null;
-                                        }
-
-                                    }
-                                }
-                            }
-                        }
-
-                        // Update Turn Label
-                        turnLbl.Text = $"{((currGame.color == currGame.playerTurn) ? $"{currentAccount.username}'s" : $"{currGame.opponentName}'s")} ({CultureInfo.CurrentCulture.TextInfo.ToTitleCase(currGame.playerTurn.ToString().ToLower())}) Turn";
-
+        private void resetCheckBoxDefaultColors()
+        {
+            for (int row = 7; row >= 0; row--)
+            {
+                for (int col = 7; col >= 0; col--)
+                {
+                    if (opBoardList[row, col] != null)
+                    {
+                        opBoardList[row, col].checkerBoardColor = opBoardList[row, col].baseFieldColor;
+                        opBoardList[row, col].BackColor = opBoardList[row, col].baseFieldColor;
+                    }
+                    if (chessBoardList[row, col] != null)
+                    {
+                        chessBoardList[row, col].checkerBoardColor = chessBoardList[row, col].baseFieldColor;
+                        chessBoardList[row, col].BackColor = chessBoardList[row, col].baseFieldColor;
                     }
 
                 }
             }
+        }
 
+        private void gameHasEnded(Game sender, ChessmanColor winner, GameStatus res)
+        {
+            MessageBox.Show($"Game Over\nResult: {((winner == ChessmanColor.none) ? "Draw" : $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(winner.ToString())} Wins!")}\nReason: {res.ToString()}", "Game Has Ended");
+        }
+
+        public MyCheckBox getCheckBoxForChessPosition(char col, int row, MyCheckBox[,] board)
+        {
+            MyCheckBox rv = null;
+            try
+            {
+                if (col >= 'A' && col <= 'H' && row >= 1 && row <= 8)
+                {
+                    rv = board[MyCheckBox.getIndexForBoardRow(row), MyCheckBox.getIndexForBoardColumn(col)];
+                }
+            }
+            catch
+            {
+
+            }
+
+            return rv;
         }
 
         private void executeUCIBtn_Click(object sender, EventArgs e)
@@ -708,11 +836,13 @@ namespace ChessEngine
 
     public class MyCheckBox : CheckBox
     {
-        Color chessBoardDarkColor = Color.FromArgb(255, 0, 84, 229);
-        Color chessBoardLightColor = Color.Gray;
+        public static Color chessBoardDarkColor = Color.FromArgb(255, 0, 84, 229);
+        public static Color chessBoardLightColor = Color.Gray;
+        public static Color chessBoardLastMoveColor = Color.FromArgb(255, Color.MediumAquamarine);
 
         public DateTime lastTimeSelected = DateTime.Now;
-        public Color checkerBoardColor;
+        public Color baseFieldColor = chessBoardLightColor;
+        public Color checkerBoardColor = chessBoardLightColor;
 
         public MyCheckBox(Char column, int row)
         {
@@ -723,53 +853,63 @@ namespace ChessEngine
                 case 'A':
                     if (row == 1 || row == 3 || row == 5 || row == 7)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'B':
                     if (row == 2 || row == 4 || row == 6 || row == 8)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'C':
                     if (row == 1 || row == 3 || row == 5 || row == 7)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'D':
                     if (row == 2 || row == 4 || row == 6 || row == 8)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'E':
                     if (row == 1 || row == 3 || row == 5 || row == 7)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'F':
                     if (row == 2 || row == 4 || row == 6 || row == 8)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'G':
                     if (row == 1 || row == 3 || row == 5 || row == 7)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
                 case 'H':
                     if (row == 2 || row == 4 || row == 6 || row == 8)
                     {
-                        checkerBoardColor = chessBoardDarkColor;
+                        checkerBoardColor = baseFieldColor = chessBoardDarkColor;
                     }
                     break;
             }
             BackColor = checkerBoardColor;
+        }
+
+        public static int getIndexForBoardRow(int row)
+        {
+            return 8 - row;
+        }
+
+        public static int getIndexForBoardColumn(Char Col)
+        {
+            return Col - 'A';
         }
     }
 

@@ -38,6 +38,11 @@
             this.executeUCIBtn = new System.Windows.Forms.Button();
             this.ChessBoardPlaceholder = new System.Windows.Forms.GroupBox();
             this.turnLbl = new System.Windows.Forms.Label();
+            this.playerClockNameLbl = new System.Windows.Forms.Label();
+            this.playerClockTimeLbl = new System.Windows.Forms.Label();
+            this.oppClockTimeLbl = new System.Windows.Forms.Label();
+            this.oppClockNameLbl = new System.Windows.Forms.Label();
+            this.oppBoardNameLbl = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // authTokenTxtBox
@@ -71,7 +76,7 @@
             this.gamesListBox.FormattingEnabled = true;
             this.gamesListBox.Location = new System.Drawing.Point(17, 102);
             this.gamesListBox.Name = "gamesListBox";
-            this.gamesListBox.Size = new System.Drawing.Size(529, 186);
+            this.gamesListBox.Size = new System.Drawing.Size(367, 186);
             this.gamesListBox.TabIndex = 3;
             this.gamesListBox.SelectedIndexChanged += new System.EventHandler(this.gamesListBox_SelectedIndexChanged);
             // 
@@ -131,11 +136,68 @@
             this.turnLbl.TabIndex = 11;
             this.turnLbl.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // playerClockNameLbl
+            // 
+            this.playerClockNameLbl.AutoSize = true;
+            this.playerClockNameLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.playerClockNameLbl.Location = new System.Drawing.Point(400, 102);
+            this.playerClockNameLbl.Name = "playerClockNameLbl";
+            this.playerClockNameLbl.Size = new System.Drawing.Size(108, 16);
+            this.playerClockNameLbl.TabIndex = 12;
+            this.playerClockNameLbl.Text = "Player\'s Clock";
+            // 
+            // playerClockTimeLbl
+            // 
+            this.playerClockTimeLbl.AutoSize = true;
+            this.playerClockTimeLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.playerClockTimeLbl.Location = new System.Drawing.Point(403, 131);
+            this.playerClockTimeLbl.Name = "playerClockTimeLbl";
+            this.playerClockTimeLbl.Size = new System.Drawing.Size(97, 25);
+            this.playerClockTimeLbl.TabIndex = 13;
+            this.playerClockTimeLbl.Text = "000:000";
+            this.playerClockTimeLbl.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // oppClockTimeLbl
+            // 
+            this.oppClockTimeLbl.AutoSize = true;
+            this.oppClockTimeLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.oppClockTimeLbl.Location = new System.Drawing.Point(403, 195);
+            this.oppClockTimeLbl.Name = "oppClockTimeLbl";
+            this.oppClockTimeLbl.Size = new System.Drawing.Size(97, 25);
+            this.oppClockTimeLbl.TabIndex = 15;
+            this.oppClockTimeLbl.Text = "000:000";
+            this.oppClockTimeLbl.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
+            // oppClockNameLbl
+            // 
+            this.oppClockNameLbl.AutoSize = true;
+            this.oppClockNameLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.oppClockNameLbl.Location = new System.Drawing.Point(400, 166);
+            this.oppClockNameLbl.Name = "oppClockNameLbl";
+            this.oppClockNameLbl.Size = new System.Drawing.Size(130, 16);
+            this.oppClockNameLbl.TabIndex = 14;
+            this.oppClockNameLbl.Text = "Opponent\'s Clock";
+            // 
+            // oppBoardNameLbl
+            // 
+            this.oppBoardNameLbl.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.oppBoardNameLbl.Location = new System.Drawing.Point(17, 305);
+            this.oppBoardNameLbl.Name = "oppBoardNameLbl";
+            this.oppBoardNameLbl.Size = new System.Drawing.Size(367, 23);
+            this.oppBoardNameLbl.TabIndex = 16;
+            this.oppBoardNameLbl.Text = "Opponent\'s Board";
+            this.oppBoardNameLbl.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(577, 466);
+            this.ClientSize = new System.Drawing.Size(558, 369);
+            this.Controls.Add(this.oppBoardNameLbl);
+            this.Controls.Add(this.oppClockTimeLbl);
+            this.Controls.Add(this.oppClockNameLbl);
+            this.Controls.Add(this.playerClockTimeLbl);
+            this.Controls.Add(this.playerClockNameLbl);
             this.Controls.Add(this.turnLbl);
             this.Controls.Add(this.ChessBoardPlaceholder);
             this.Controls.Add(this.executeUCIBtn);
@@ -166,6 +228,11 @@
         private System.Windows.Forms.Button executeUCIBtn;
         private System.Windows.Forms.GroupBox ChessBoardPlaceholder;
         private System.Windows.Forms.Label turnLbl;
+        private System.Windows.Forms.Label playerClockNameLbl;
+        private System.Windows.Forms.Label playerClockTimeLbl;
+        private System.Windows.Forms.Label oppClockTimeLbl;
+        private System.Windows.Forms.Label oppClockNameLbl;
+        private System.Windows.Forms.Label oppBoardNameLbl;
     }
 }
 
