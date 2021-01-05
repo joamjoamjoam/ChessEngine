@@ -57,46 +57,122 @@ namespace ChessEngine
             }
             else
             {
-                if (cb.Checked)
-                {
-                    //cb.Image = ResizeImage(Properties.Resources.BlackKnight,  cb.Size.Width/2, cb.Size.Height/2);
-                    cb.BackColor = Color.Yellow;
-                }
-                else
-                {
-                    cb.BackColor = cb.checkerBoardColor;
-                }
 
                 if (selectedSpaces.Count == 2)
                 {
-
-
                     String move = "";
+                    MyCheckBox fromSpace = null;
+                    MyCheckBox toSpace = null;
                     if (DateTime.Compare(selectedSpaces[0].lastTimeSelected , selectedSpaces[1].lastTimeSelected) < 0)
                     {
-                        move = $"{selectedSpaces[0].Name.ToLower()}{selectedSpaces[1].Name.ToLower()}";
+                        fromSpace = selectedSpaces[0];
+                        toSpace = selectedSpaces[1];
                     }
                     else
                     {
-                        move = $"{selectedSpaces[1].Name.ToLower()}{selectedSpaces[0].Name.ToLower()}";
+                        fromSpace = selectedSpaces[1];
+                        toSpace = selectedSpaces[0];
                     }
 
-                    if (!((Game)gamesListBox.SelectedItem).makeMove(move))
+                    if (toSpace.BackColor == MyCheckBox.chessBoardValidMoveColor)
                     {
-                        MessageBox.Show($"Move '{move}' is Invalid.");
-                    }
+                        move = $"{fromSpace.Name.ToLower()}{toSpace.Name.ToLower()}";
 
-                    // Make Move and Clear boxes
-                    foreach (MyCheckBox c in selectedSpaces)
+                        if (!((Game)gamesListBox.SelectedItem).makeMove(move))
+                        {
+                            //toSpace.Checked = false;
+
+                            if (toSpace.getLinkedBoardSpace().piece != null && toSpace.getLinkedBoardSpace().piece.color == toSpace.game.color)
+                            {
+                                // Select this piece instead
+                                fromSpace.Checked = false;
+                            }
+                            else
+                            {
+                                toSpace.Checked = false;
+                            }
+
+                        }
+                        else
+                        {
+                            toSpace.Checked = false;
+                            fromSpace.Checked = false;
+                        }
+                    }
+                    else
                     {
-                        c.Checked = false;
+                        if (toSpace.getLinkedBoardSpace().piece != null && toSpace.getLinkedBoardSpace().piece.color == toSpace.game.color)
+                        {
+                            // Select this piece instead
+                            resetCheckBoxDefaultColors(visualOnly: true);
+                            fromSpace.Checked = false;
+                            toSpace.BackColor = MyCheckBox.chessBoardSelectedColor;
+                            toSpace.Checked = true;
+                            updateValidSquaresForSelectedCB(toSpace);
+                        }
+                        else
+                        {
+                            //MessageBox.Show($"Move '{move}' is Invalid.");
+                            toSpace.Checked = false;
+                        }
                     }
-
                 }
                 else if (selectedSpaces.Count == 1)
                 {
-                    // Disable All Invalid moves
+                    updateValidSquaresForSelectedCB(cb);
                 }
+                else
+                {
+                    // Non selected Reset Colors
+                    resetCheckBoxDefaultColors(visualOnly: true);
+                }
+            }
+        }
+
+        private void updateValidSquaresForSelectedCB(MyCheckBox cb)
+        {
+            if (cb.Checked)
+            {
+                //cb.Image = ResizeImage(Properties.Resources.BlackKnight,  cb.Size.Width/2, cb.Size.Height/2);
+                cb.BackColor = MyCheckBox.chessBoardSelectedColor;
+            }
+            else
+            {
+                cb.BackColor = cb.checkerBoardColor;
+            }
+            //Disable All Invalid moves
+            Game currGame = ((Game)gamesListBox.SelectedItem);
+            Board board = currGame.gameBoard;
+            BoardSpace boardPos = cb.getLinkedBoardSpace();
+
+            if (boardPos.piece != null && boardPos.piece.color == currGame.color)
+            {
+                List<Move> validMoves = boardPos.piece.getAvailableMoves(board);
+
+                foreach (Move mv in validMoves)
+                {
+                    // Highlight valid Moves
+                    bool found = false;
+                    for (int row = 1; row <= 8; row++)
+                    {
+                        for (Char col = 'A'; col <= 'H'; col++)
+                        {
+                            MyCheckBox itCB = chessBoardList[row - 1, col - 'A'];
+                            if (itCB.row == mv.toSpace.position.Item2 && itCB.column == mv.toSpace.position.Item1)
+                            {
+                                itCB.BackColor = MyCheckBox.chessBoardValidMoveColor;
+                                found = true;
+                                break; ;
+                            }
+                            if (found)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                }
+
             }
         }
 
@@ -323,12 +399,12 @@ namespace ChessEngine
                             
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
-                            MyCheckBox cb = new MyCheckBox(tmp, effectiveRow);
+                            MyCheckBox cb = new MyCheckBox(tmp, effectiveRow, currGame);
                             cb.GotFocus += opBoardSqaureGotFocus;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
-                            cb.CheckedChanged += boardSqaureCheckChanged;
+                            cb.Click += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
                             bool legendPrinted = false;
@@ -389,12 +465,12 @@ namespace ChessEngine
                             int effectiveRow = 8 - row;
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
-                            MyCheckBox cb = new MyCheckBox(tmp, row);
+                            MyCheckBox cb = new MyCheckBox(tmp, row+1, currGame);
                             cb.GotFocus += opBoardSqaureGotFocus;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
-                            cb.CheckedChanged += boardSqaureCheckChanged;
+                            cb.Click += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
                             bool legendPrinted = false;
@@ -472,14 +548,13 @@ namespace ChessEngine
 
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
-                            MyCheckBox cb = new MyCheckBox(tmp, effectiveRow);
+                            MyCheckBox cb = new MyCheckBox(tmp, effectiveRow, currGame);
 
                             cb.GotFocus += opBoardSqaureGotFocus;
                             cb.CheckedChanged += opBoardSqaureCheckedChanged;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
-                            cb.CheckedChanged += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
                             bool legendPrinted = false;
@@ -537,13 +612,12 @@ namespace ChessEngine
                             int effectiveRow = 8 - row;
                             //boardState[row, col] = new BoardSpace(tmp, effectiveRow);
 
-                            MyCheckBox cb = new MyCheckBox(tmp, row);
+                            MyCheckBox cb = new MyCheckBox(tmp, (row+1), currGame);
                             cb.GotFocus += opBoardSqaureGotFocus;
                             cb.CheckedChanged += opBoardSqaureCheckedChanged;
                             cb.AutoSize = false;
                             cb.Appearance = Appearance.Button;
                             cb.ImageAlign = ContentAlignment.MiddleCenter;
-                            cb.CheckedChanged += boardSqaureCheckChanged;
                             cb.Name = $"{tmp}{effectiveRow}";
 
                             bool legendPrinted = false;
@@ -709,14 +783,14 @@ namespace ChessEngine
                         }
                         else
                         {
-                            MyCheckBox check = getCheckBoxForChessPosition(currGame.lastMove.toSpace.position.Item1, currGame.lastMove.toSpace.position.Item2, chessBoardList);
+                            MyCheckBox check = getCheckBoxForChessPosition(currGame.lastMove.toSpace.position.Item1, currGame.lastMove.toSpace.position.Item2, chessBoardList, currGame);
                             if (check != null)
                             {
                                 check.checkerBoardColor = MyCheckBox.chessBoardLastMoveColor;
                                 check.BackColor = check.checkerBoardColor;
                             }
 
-                            check = getCheckBoxForChessPosition(currGame.lastMove.fromSpace.position.Item1, currGame.lastMove.fromSpace.position.Item2, chessBoardList);
+                            check = getCheckBoxForChessPosition(currGame.lastMove.fromSpace.position.Item1, currGame.lastMove.fromSpace.position.Item2, chessBoardList, currGame);
                             if (check != null)
                             {
                                 check.checkerBoardColor = MyCheckBox.chessBoardLastMoveColor;
@@ -733,7 +807,7 @@ namespace ChessEngine
 
         }
 
-        private void resetCheckBoxDefaultColors()
+        private void resetCheckBoxDefaultColors(bool visualOnly = false)
         {
             for (int row = 7; row >= 0; row--)
             {
@@ -741,13 +815,19 @@ namespace ChessEngine
                 {
                     if (opBoardList[row, col] != null)
                     {
-                        opBoardList[row, col].checkerBoardColor = opBoardList[row, col].baseFieldColor;
-                        opBoardList[row, col].BackColor = opBoardList[row, col].baseFieldColor;
+                        if (!visualOnly)
+                        {
+                            opBoardList[row, col].checkerBoardColor = opBoardList[row, col].baseFieldColor;
+                        }
+                        opBoardList[row, col].BackColor = opBoardList[row, col].checkerBoardColor;
                     }
                     if (chessBoardList[row, col] != null)
                     {
-                        chessBoardList[row, col].checkerBoardColor = chessBoardList[row, col].baseFieldColor;
-                        chessBoardList[row, col].BackColor = chessBoardList[row, col].baseFieldColor;
+                        if (!visualOnly)
+                        {
+                            chessBoardList[row, col].checkerBoardColor = opBoardList[row, col].baseFieldColor;
+                        }
+                        chessBoardList[row, col].BackColor = chessBoardList[row, col].checkerBoardColor;
                     }
 
                 }
@@ -759,14 +839,14 @@ namespace ChessEngine
             MessageBox.Show($"Game Over\nResult: {((winner == ChessmanColor.none) ? "Draw" : $"{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(winner.ToString())} Wins!")}\nReason: {res.ToString()}", "Game Has Ended");
         }
 
-        public MyCheckBox getCheckBoxForChessPosition(char col, int row, MyCheckBox[,] board)
+        public MyCheckBox getCheckBoxForChessPosition(char col, int row, MyCheckBox[,] board, Game currGame)
         {
             MyCheckBox rv = null;
             try
             {
                 if (col >= 'A' && col <= 'H' && row >= 1 && row <= 8)
                 {
-                    rv = board[MyCheckBox.getIndexForBoardRow(row), MyCheckBox.getIndexForBoardColumn(col)];
+                    rv = board[MyCheckBox.getIndexForBoardRow(row, currGame.color), MyCheckBox.getIndexForBoardColumn(col, currGame.color)];
                 }
             }
             catch
@@ -839,15 +919,22 @@ namespace ChessEngine
         public static Color chessBoardDarkColor = Color.FromArgb(255, 0, 84, 229);
         public static Color chessBoardLightColor = Color.Gray;
         public static Color chessBoardLastMoveColor = Color.FromArgb(255, Color.MediumAquamarine);
+        public static Color chessBoardValidMoveColor = Color.FromArgb(180, Color.LimeGreen);
+        public static Color chessBoardSelectedColor = Color.Yellow;
 
         public DateTime lastTimeSelected = DateTime.Now;
         public Color baseFieldColor = chessBoardLightColor;
         public Color checkerBoardColor = chessBoardLightColor;
 
-        public MyCheckBox(Char column, int row)
+        public Char column = 'A';
+        public int row = 1;
+        public Game game = null;
+
+        public MyCheckBox(Char column, int row, Game game)
         {
             checkerBoardColor = chessBoardLightColor;
-            
+            this.column = column;
+            this.row = row;
             switch (column)
             {
                 case 'A':
@@ -900,16 +987,22 @@ namespace ChessEngine
                     break;
             }
             BackColor = checkerBoardColor;
+
+            this.game = game;
         }
 
-        public static int getIndexForBoardRow(int row)
-        {
-            return 8 - row;
+        public BoardSpace getLinkedBoardSpace() {
+           return (game.color == ChessmanColor.white) ? game.gameBoard.getSpace(column, (8-row + 1)) : game.gameBoard.getSpace(column, row);
         }
 
-        public static int getIndexForBoardColumn(Char Col)
+        public static int getIndexForBoardRow(int row, ChessmanColor color)
         {
-            return Col - 'A';
+            return (color == ChessmanColor.white || true) ? 8 - row : row;
+        }
+
+        public static int getIndexForBoardColumn(Char col, ChessmanColor color)
+        {
+            return (color == ChessmanColor.white) ? col - 'A' : 'H' - col;
         }
     }
 

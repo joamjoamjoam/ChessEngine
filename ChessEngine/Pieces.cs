@@ -23,7 +23,6 @@ namespace ChessEngine
 
 
         public abstract List<Move> getAvailableMoves(Board boardState);
-        public abstract bool isMoveValid(Board parentBoard, Move move);
         public abstract Image getImage();
 
     }
@@ -32,10 +31,11 @@ namespace ChessEngine
     {
         private Image whiteImage;
         private Image blackImage;
+        public  bool canMoveTwice = true;
 
         public Pawn(BoardSpace initPos, ChessmanColor color)
         {
-            score = 10;
+            score = AIWeights.pawnScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhitePawn;
@@ -44,12 +44,75 @@ namespace ChessEngine
 
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            List<Move> validMoveList = new List<Move>();
+            // Get Valid Moves
+
+            int numMoves = (canMoveTwice) ? 2 : 1;
+            BoardSpace toPos = null;
+
+            // Then handle White Games not showing valid moves correctly
+            if (true /*!kingIsInCheck*/)
+            {
+                // Normal Moves
+
+                // First Move
+                for (int i = 1; i <= numMoves; i++)
+                {
+                    toPos = boardState.getSpace(Convert.ToChar(position.position.Item1), (color == ChessmanColor.white) ? position.position.Item2 + i : position.position.Item2 - i);
+
+                    if (toPos != null)
+                    {
+                        if (toPos.piece == null)
+                        {
+                            Move newMove = new Move(this, position, toPos, boardState, 0);
+
+                            // Is A Promoting Move
+                            if ((color == ChessmanColor.white) ? (toPos.position.Item2 == 8) : (toPos.position.Item2 == 1))
+                            {
+                                newMove.score = AIWeights.queenScore;
+                            }
+
+                            validMoveList.Add(newMove);
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                    }
+                    else
+                    {
+                        continue;
+                    }
+
+                }
+
+                // Attacking Moves
+                toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
+                BoardSpace toPos2 = boardState.getSpace(Convert.ToChar(position.position.Item1 - 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
+                List<BoardSpace> possibleMoves = new List<BoardSpace>() { toPos, toPos2 };
+                foreach (BoardSpace space in possibleMoves)
+                {
+                    if (space != null)
+                    {
+                        if (space != null && space.piece != null && space.piece.color == Helper.getOpponentColor(color))
+                        {
+                            validMoveList.Add(new Move(this, position, space, boardState, ((space.piece.color == Helper.getOpponentColor(color)) ? space.piece.score : 0)));
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+
+                // Amend Scores for Pieces that Are now attacking this piece
+            }
+
+            return validMoveList;
+
         }
-        public override bool isMoveValid(Board parentBoard, Move move)
-        {
-            throw new NotImplementedException();
-        }
+
 
         public override Image getImage()
         {
@@ -85,7 +148,7 @@ namespace ChessEngine
         private Image blackImage;
         public Knight(BoardSpace initPos, ChessmanColor color)
         {
-            score = 100;
+            score = AIWeights.knightScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhiteKnight;
@@ -93,11 +156,6 @@ namespace ChessEngine
         }
 
         public override List<Move> getAvailableMoves(Board boardState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -135,7 +193,7 @@ namespace ChessEngine
         private Image blackImage;
         public Rook(BoardSpace initPos, ChessmanColor color)
         {
-            score = 500;
+            score = AIWeights.rookScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhiteRook;
@@ -143,11 +201,6 @@ namespace ChessEngine
         }
 
         public override List<Move> getAvailableMoves(Board boardState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -184,7 +237,7 @@ namespace ChessEngine
         private Image blackImage;
         public Bishop(BoardSpace initPos, ChessmanColor color)
         {
-            score = 100;
+            score = AIWeights.bishopScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhiteBishop;
@@ -192,11 +245,6 @@ namespace ChessEngine
         }
 
         public override List<Move> getAvailableMoves(Board boardState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -233,7 +281,7 @@ namespace ChessEngine
         private Image blackImage;
         public Queen(BoardSpace initPos, ChessmanColor color)
         {
-            score = 5000;
+            score = AIWeights.queenScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhiteQueen;
@@ -241,11 +289,6 @@ namespace ChessEngine
         }
 
         public override List<Move> getAvailableMoves(Board boardState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }
@@ -285,7 +328,7 @@ namespace ChessEngine
 
         public King(BoardSpace initPos, ChessmanColor color)
         {
-            score = 1000000;
+            score = AIWeights.queenScore;
             position = initPos;
             this.color = color;
             whiteImage = Properties.Resources.WhiteKing;
@@ -293,11 +336,6 @@ namespace ChessEngine
         }
 
         public override List<Move> getAvailableMoves(Board boardState)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool isMoveValid(Board parentBoard, Move move)
         {
             throw new NotImplementedException();
         }

@@ -307,6 +307,7 @@ namespace ChessEngine
                 }
             }
             else if (toSpace.piece.GetType() == typeof(Pawn)) {
+                ((Pawn) toSpace.piece).canMoveTwice = false; // Pawns Can only Move Twice on the first move
                 if ((toSpace.piece.color == ChessmanColor.black && toSpace.position.Item2 == 1) || (toSpace.piece.color == ChessmanColor.white && toSpace.position.Item2 == 8))
                 {
                     Char promotionType = 'q';
@@ -434,7 +435,10 @@ namespace ChessEngine
 
         }
 
-
+        public override string ToString()
+        {
+            return $"";
+        }
 
     }
 
@@ -1036,6 +1040,23 @@ namespace ChessEngine
     public static class Helper
     {
         public static string apiBaseEndpoint = "https://lichess.org/api";
+
+
+
+        public static ChessmanColor getOpponentColor(ChessmanColor playerColor)
+        {
+            return ((playerColor == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white);
+        }
     }
-    
+
+    public static class AIWeights
+    {
+        public static int pawnScore = 1;
+        public static int bishopScore = 3;
+        public static int knightScore = 3;
+        public static int rookScore = 7;
+        public static int queenScore = 9;
+        public static int kingScore = 1000;
+    }
+
 }
