@@ -158,7 +158,7 @@ namespace ChessEngine
                         for (Char col = 'A'; col <= 'H'; col++)
                         {
                             MyCheckBox itCB = chessBoardList[row - 1, col - 'A'];
-                            if (itCB.row == mv.toSpace.position.Item2 && itCB.column == mv.toSpace.position.Item1)
+                            if (itCB.getLinkedBoardSpace().position.Item2 == mv.toSpace.position.Item2 && itCB.getLinkedBoardSpace().position.Item1 == mv.toSpace.position.Item1)
                             {
                                 itCB.BackColor = MyCheckBox.chessBoardValidMoveColor;
                                 found = true;
@@ -330,6 +330,8 @@ namespace ChessEngine
         {
             ListBox b = (ListBox)sender;
             // Set Browser
+            
+
 
             foreach (Control item in Controls.OfType<MyCheckBox>())
             {
@@ -340,7 +342,7 @@ namespace ChessEngine
 
             if (b.SelectedIndex != -1)
             {
-
+                
                 Game currGame = ((Game)b.Items[b.SelectedIndex]);
                 currGame.clockStateUpdated += clockStateUpdated;
                 currGame.BoardUpdated += updateGUIAfterBoardChange;

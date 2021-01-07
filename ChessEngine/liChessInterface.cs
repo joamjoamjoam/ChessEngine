@@ -437,7 +437,7 @@ namespace ChessEngine
 
         public override string ToString()
         {
-            return $"";
+            return $"{((piece == null) ? "-" : piece.ToString())}: {fromSpace.getCoordinateString()}{toSpace.getCoordinateString()}";
         }
 
     }
@@ -610,6 +610,7 @@ namespace ChessEngine
         {
             if (json != null)
             {
+                Debug.WriteLine($"Game = {json.ToString()}");
                 clockUpdateTimer.Interval = tickInterval;
                 clockUpdateTimer.Elapsed += clockTimerTick;
                 fullId = (String)json["fullId"];
@@ -627,8 +628,8 @@ namespace ChessEngine
                 try
                 {
                     String fenStr = ((String)json["fen"]).ToString();
-                    gameBoard = new Board(fenStr);
-
+                    //gameBoard = new Board(fenStr);
+                    gameBoard = new Board();
                 }
                 catch
                 {
@@ -747,6 +748,8 @@ namespace ChessEngine
                                 int moveCount = ((String)(((JObject)(json["state"]))["moves"])).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Count();
                                 if (moveCount > 0)
                                 {
+                                    // Update Game Board Initial State
+                                    this.uciParser.executeUCIOperation($"position startpos moves { ((String)(((JObject)(json["state"]))["moves"]))}");
                                     lastMove = new Move(((String)(((JObject)(json["state"]))["moves"])).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[moveCount-1], gameBoard, postMove: true); 
                                 }
                                 
