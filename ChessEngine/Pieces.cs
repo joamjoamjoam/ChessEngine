@@ -42,6 +42,43 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackPawn;
         }
 
+        public Pawn(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(Pawn))
+            {
+                Pawn from = (Pawn)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+                canMoveTwice = from.canMoveTwice;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public Pawn(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(Pawn))
+            {
+                Pawn from = (Pawn)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+                canMoveTwice = from.canMoveTwice;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
             List<Move> validMoveList = new List<Move>();
@@ -50,8 +87,7 @@ namespace ChessEngine
             int numMoves = (canMoveTwice) ? 2 : 1;
             BoardSpace toPos = null;
 
-            // Then handle White Games not showing valid moves correctly
-            if (true /*!kingIsInCheck*/)
+            if (!boardState.isKingInCheck(color))
             {
                 // Normal Moves
 
@@ -155,9 +191,74 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackKnight;
         }
 
+        public Knight(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(Knight))
+            {
+                Knight from = (Knight)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public Knight(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(Knight))
+            {
+                Knight from = (Knight)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            List<Move> validMoveList = new List<Move>();
+
+            // Get Valid Moves
+            BoardSpace toPos = null;
+
+            if (!boardState.isKingInCheck(color))
+            {
+                for (int x = -2; x <= 2; x++)
+                {
+                    for (int y = -2; y <= 2; y++)
+                    {
+                        if (x != 0 && y != 0 && (Math.Abs(x) != Math.Abs(y)))
+                        {
+                            toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + x), position.position.Item2 + y);
+
+                            if (toPos != null)
+                            {
+                                if (toPos.piece == null || toPos.piece.color != color)
+                                {
+                                    Move newMove = new Move(this, position, toPos, boardState, (toPos.piece == null) ? 0 : toPos.piece.score);
+                                    validMoveList.Add(newMove);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Amend Scores for Pieces that Are now attacking this piece
+            }
+
+            return validMoveList;
         }
 
         public override Image getImage()
@@ -200,9 +301,160 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackRook;
         }
 
+        public Rook(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(Rook))
+            {
+                Rook from = (Rook)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public Rook(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(Rook))
+            {
+                Rook from = (Rook)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            return getMovesForRook(boardState, color, position);
+        }
+
+        public static List<Move> getMovesForRook(Board boardState, ChessmanColor color, BoardSpace position)
+        {
+            List<Move> validMoveList = new List<Move>();
+
+            // Get Valid Moves
+
+            if (!boardState.isKingInCheck(color))
+            {
+                //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
+                char col = Convert.ToChar(position.position.Item1);
+                int row = position.position.Item2 + 1;
+
+                for (; row <= 8; row++)
+                {
+                    // increasing Row
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1);
+                row = position.position.Item2 - 1;
+                for (; row >= 1; row--)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1 + 1);
+                row = position.position.Item2;
+                for (; col <= 'H'; col++)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1 - 1);
+                row = position.position.Item2;
+                for (; col >= 'A'; col--)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                // Amend Scores for Pieces that Are now attacking this piece
+            }
+
+            return validMoveList;
         }
 
         public override Image getImage()
@@ -244,9 +496,160 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackBishop;
         }
 
+        public Bishop(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(Bishop))
+            {
+                Bishop from = (Bishop)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public Bishop(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(Bishop))
+            {
+                Bishop from = (Bishop)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            return getMovesForBishop(boardState, color, position);
+        }
+
+        public static List<Move> getMovesForBishop(Board boardState, ChessmanColor color, BoardSpace position)
+        {
+            List<Move> validMoveList = new List<Move>();
+
+            // Get Valid Moves
+            BoardSpace toPos = null;
+
+            if (!boardState.isKingInCheck(color))
+            {
+                //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
+                char col = Convert.ToChar(position.position.Item1 + 1);
+                int row = position.position.Item2 + 1;
+
+                for ( ; row <= 8 && col <= 'H'; row++, col++)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+                        
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1 - 1);
+                row = position.position.Item2 - 1;
+                for (; row >= 1 && col >= 'A'; row--, col--)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1 + 1);
+                row = position.position.Item2 - 1;
+                for (; row >= 1 && col <= 'H'; row--, col++)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                col = Convert.ToChar(position.position.Item1 - 1);
+                row = position.position.Item2 + 1;
+                for (; row <= 8 && col >= 'A'; row++, col--)
+                {
+                    // increasing Diagonal
+                    BoardSpace moveSpace = boardState.getSpace(col, row);
+                    if (moveSpace != null)
+                    {
+
+                        if (moveSpace.piece == null)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                        }
+                        else if (moveSpace.piece.color != color)
+                        {
+                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                            break;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                // Amend Scores for Pieces that Are now attacking this piece
+            }
+
+            return validMoveList;
         }
 
         public override Image getImage()
@@ -288,9 +691,51 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackQueen;
         }
 
+        public Queen(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(Queen))
+            {
+                Queen from = (Queen)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public Queen(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(Queen))
+            {
+                Queen from = (Queen)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            List<Move> validMovesList = new List<Move>();
+            if (!boardState.isKingInCheck(color))
+            {
+                validMovesList.AddRange(Bishop.getMovesForBishop(boardState, color, position));
+                validMovesList.AddRange(Rook.getMovesForRook(boardState, color, position));
+            }
+
+            return validMovesList;
         }
 
         public override Image getImage()
@@ -335,9 +780,91 @@ namespace ChessEngine
             blackImage = Properties.Resources.BlackKing;
         }
 
+        public King(Chessman fromPiece)
+        {
+            if (fromPiece.GetType() == typeof(King))
+            {
+                King from = (King)fromPiece;
+                score = from.score;
+                position = null;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+                canCastle = from.canCastle;
+        }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+        }
+
+        public King(Chessman fromPiece, BoardSpace initPos)
+        {
+            if (fromPiece.GetType() == typeof(King))
+            {
+                King from = (King)fromPiece;
+                score = from.score;
+                position = initPos;
+                this.color = from.color;
+                whiteImage = from.whiteImage;
+                blackImage = from.blackImage;
+                canCastle = from.canCastle;
+            }
+            else
+            {
+                throw new Exception($"Cant Create Copy of Piece becasue it is the wrong type");
+            }
+
+        }
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            throw new NotImplementedException();
+            List<Move> validMoveList = new List<Move>();
+            // Get Valid Moves
+
+            BoardSpace toPos = null;
+
+
+            // Then handle White Games not showing valid moves correctly
+            // Normal Moves
+
+            // First Move
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (!(x == 0 && y == 0))
+                    {
+                        toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + x), position.position.Item2 + y);
+
+                        if (toPos != null)
+                        {
+                            if (toPos.piece == null || toPos.piece.color != color)
+                            {
+                                Move newMove = new Move(this, position, toPos, boardState, (toPos.piece == null) ? 0 : toPos.piece.score);
+                                Board newBoardAfterMove = new Board(boardState);
+                                newBoardAfterMove.updateBoardForMove(newMove);
+
+                                if (!newBoardAfterMove.isKingInCheck(color)) // Check if New Move is in Check
+                                {
+                                    validMoveList.Add(newMove);
+                                }
+                                else
+                                {
+                                  
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Amend Scores for Pieces that Are now attacking this piece
+            // Handle Castle
+
+            return validMoveList;
+
+
         }
 
         public override Image getImage()

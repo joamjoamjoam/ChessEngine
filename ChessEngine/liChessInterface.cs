@@ -31,7 +31,10 @@ namespace ChessEngine
     public class Board
     {
         BoardSpace[,] boardState = new BoardSpace[8, 8]; //Column, Row
-
+        List<Chessman> attacksOnWhiteKing = new List<Chessman>();
+        List<Chessman> attacksOnBlackKing = new List<Chessman>();
+        BoardSpace whiteKingPos = null;
+        BoardSpace blackKingPos = null;
 
         public Board(String fen = "")
         {
@@ -74,6 +77,13 @@ namespace ChessEngine
                                     break;
                                 case 'E':
                                     boardState[row, col].piece = new King(boardState[row, col], ((effectiveRow == 1) ? ChessmanColor.white : ChessmanColor.black));
+                                    if (effectiveRow == 1)
+                                    {
+                                        whiteKingPos = boardState[row, col];
+                                    }
+                                    else{
+                                        blackKingPos = boardState[row, col];
+                                    }
                                     break;
                                 case 'F':
                                     boardState[row, col].piece = new Bishop(boardState[row, col], ((effectiveRow == 1) ? ChessmanColor.white : ChessmanColor.black));
@@ -88,10 +98,35 @@ namespace ChessEngine
                         }
                     }
                 }
-
-
-
             }
+        }
+
+        public Board(Board fromBoard)
+        {
+
+            // Copy BoardState Array
+
+            for (int row  = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    boardState[row, col] = new BoardSpace(fromBoard.boardState[row, col]);
+                }
+            }
+
+            foreach (Chessman p in fromBoard.getAttackersOnKing(ChessmanColor.black))
+            {
+                attacksOnBlackKing.Add(this.getSpace(p.position.position.Item1, p.position.position.Item2).piece);
+            }
+
+            foreach (Chessman p in fromBoard.getAttackersOnKing(ChessmanColor.white))
+            {
+                attacksOnWhiteKing.Add(this.getSpace(p.position.position.Item1, p.position.position.Item2).piece);
+            }
+
+            // update attacks arrays
+            whiteKingPos = this.getSpace(fromBoard.whiteKingPos.position.Item1, fromBoard.whiteKingPos.position.Item2);
+            blackKingPos = this.getSpace(fromBoard.blackKingPos.position.Item1, fromBoard.blackKingPos.position.Item2);
         }
 
         public BoardSpace[,] getBoard()
@@ -111,11 +146,50 @@ namespace ChessEngine
             }
         }
 
+        public void updateAttacksOnKing(ChessmanColor color)
+        {
+            attacksOnBlackKing = new List<Chessman>();
+            attacksOnWhiteKing = new List<Chessman>();
+
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    if (boardState[row,col].piece != null && boardState[row, col].piece.GetType() != typeof(King) && boardState[row, col].piece.color != color && boardState[row, col].piece.getAvailableMoves(this).Where(m => m.toSpace == (( color == ChessmanColor.white) ? whiteKingPos : blackKingPos)).Count() > 0)
+                    {
+                        if (color == ChessmanColor.white) {
+                            attacksOnWhiteKing.Add(boardState[row, col].piece);
+                        }
+                        else
+                        {
+                            attacksOnBlackKing.Add(boardState[row, col].piece);
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        public bool isKingInCheck(ChessmanColor color)
+        {
+            return (color == ChessmanColor.white) ? attacksOnWhiteKing.Count > 0 : attacksOnBlackKing.Count > 0;
+        }
+
+        public List<Chessman> getAttackersOnKing(ChessmanColor color)
+        {
+            return (color == ChessmanColor.white) ? attacksOnWhiteKing : attacksOnBlackKing;
+        }
+
+        public bool updateBoardForMove(Move move)
+        {
+            return updateBoardForMove(move.getUCIMoveStr());
+        }
+
 
         public bool updateBoardForMove(String move)
         {
             bool moveValid = false;
-            bool kingInCheck = false;
             String fromPos = move.Substring(0, 2).ToUpper();
             String toPos = move.Substring(2, 2).ToUpper();
             String extraArgs = "";
@@ -266,9 +340,6 @@ namespace ChessEngine
 
             }
 
-
-
-
             return moveValid;
         }
 
@@ -296,6 +367,13 @@ namespace ChessEngine
                 if (kp.canCastle)
                 {
                     kp.canCastle = false;
+                }
+                if(kp.color == ChessmanColor.white)
+                {
+                    whiteKingPos = toSpace;
+                }
+                else{
+                    blackKingPos = toSpace;
                 }
             }
             else if (toSpace.piece.GetType() == typeof(Rook))
@@ -341,6 +419,8 @@ namespace ChessEngine
                     }
                 }
             }
+
+            updateAttacksOnKing(toSpace.piece.color);
 
             return killedPiece;
         }
@@ -435,6 +515,35 @@ namespace ChessEngine
 
         }
 
+        public override bool Equals(object obj)
+        {
+            bool rv = false;
+
+            if (obj != null || GetType() == obj.GetType())
+            {
+                Move fromMove = (Move)obj;
+                if (fromMove.fromSpace.Equals(fromSpace) && fromMove.toSpace.Equals(toSpace))
+                {
+                    rv = true;
+                }
+            }
+            
+
+            return rv;
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            // TODO: write your implementation of GetHashCode() here
+            return base.GetHashCode();
+        }
+
+        public String getUCIMoveStr()
+        {
+            return $"{fromSpace.getCoordinateString().ToLower()}{toSpace.getCoordinateString().ToLower()}";
+        }
+
         public override string ToString()
         {
             return $"{((piece == null) ? "-" : piece.ToString())}: {fromSpace.getCoordinateString()}{toSpace.getCoordinateString()}";
@@ -460,9 +569,56 @@ namespace ChessEngine
             }
         }
 
+        public BoardSpace(Char column, int row, Chessman piece)
+        {
+            if (column >= 'A' && column <= 'H' && row >= 1 && row <= 8)
+            {
+                // Valid Board Space
+                position = new Tuple<char, int>(column, row);
+            }
+            else
+            {
+                throw new InvalidDataException($"{column}{row} is an invalid space designation.");
+            }
+            this.piece = piece;
+        }
+
+        public BoardSpace(BoardSpace fromSpace)
+        {
+            position = fromSpace.position;
+            piece = null;
+
+            if (fromSpace.piece != null)
+            {
+                if (fromSpace.piece.GetType() == typeof(Pawn))
+                {
+                    piece = new Pawn(fromSpace.piece, this);
+                }
+                else if (fromSpace.piece.GetType() == typeof(Knight))
+                {
+                    piece = new Knight(fromSpace.piece, this);
+                }
+                else if (fromSpace.piece.GetType() == typeof(Bishop))
+                {
+                    piece = new Bishop(fromSpace.piece, this);
+                }
+                else if (fromSpace.piece.GetType() == typeof(Rook))
+                {
+                    piece = new Rook(fromSpace.piece, this);
+                }
+                else if (fromSpace.piece.GetType() == typeof(Queen))
+                {
+                    piece = new Queen(fromSpace.piece, this);
+                }
+                else if (fromSpace.piece.GetType() == typeof(King))
+                {
+                    piece = new King(fromSpace.piece, this);
+                }
+            }
+        }
+
         public override String ToString()
         {
-            //return $"{position.Item1}{position.Item2}";
             String rv = "";
             if (piece != null)
             {
@@ -474,6 +630,29 @@ namespace ChessEngine
             }
 
             return rv;
+        }
+
+        public override bool Equals(object obj)
+        {
+            bool rv = false;
+
+            if (obj != null || GetType() == obj.GetType())
+            {
+                BoardSpace passedSpace = (BoardSpace)obj;
+                if (position.Item1 == passedSpace.position.Item1 && position.Item2 == passedSpace.position.Item2)
+                {
+                    rv = true;
+                }
+            }
+
+            return rv;
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            // TODO: write your implementation of GetHashCode() here
+            return base.GetHashCode();
         }
 
         public String getCoordinateString()
