@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -9,6 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -804,8 +806,22 @@ namespace ChessEngine
                     {
                         resetCheckBoxDefaultColors();
                     }
+
+                    
+                    if (currGame.color == currGame.playerTurn)
+                    {
+                        Thread.Sleep(2000);
+                        Move bestMove = AIWeights.makeMoveFromBoard(currGame.gameBoard, currGame.color);
+                        if (bestMove != null)
+                        {
+                            Debug.WriteLine($"Making Move: {bestMove.ToString()}");
+                            currGame.makeMove(bestMove);
+                        }
+                    }
                 }
             }
+
+
 
         }
 

@@ -849,10 +849,6 @@ namespace ChessEngine
                                 {
                                     validMoveList.Add(newMove);
                                 }
-                                else
-                                {
-                                  
-                                }
                             }
                         }
                     }

@@ -167,8 +167,23 @@ namespace ChessEngine
                     }
                 }
             }
+        }
 
+        public List<Move> getAllAvailableMovesForPlayer(ChessmanColor color)
+        {
+            List<Move> moveList = new List<Move>();
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    if (boardState[row, col].piece != null && boardState[row, col].piece.color == color)
+                    {
+                        moveList.AddRange(boardState[row,col].piece.getAvailableMoves(this));
+                    }
+                }
+            }
 
+            return moveList;
         }
 
         public bool isKingInCheck(ChessmanColor color)
@@ -481,7 +496,8 @@ namespace ChessEngine
 
     };
 
-    public class Move{
+    public class Move: IComparable<Move>
+    {
         public Board contextBoard = null;
         public BoardSpace toSpace;
         public BoardSpace fromSpace;
@@ -513,6 +529,11 @@ namespace ChessEngine
                 throw new Exception("Supplied Move is not UCI Formatted.");
             }
 
+        }
+
+        public int CompareTo(Move other)
+        {
+            return (other.score - this.score);
         }
 
         public override bool Equals(object obj)
@@ -548,6 +569,7 @@ namespace ChessEngine
         {
             return $"{((piece == null) ? "-" : piece.ToString())}: {fromSpace.getCoordinateString()}{toSpace.getCoordinateString()}";
         }
+
 
     }
 
@@ -992,7 +1014,14 @@ namespace ChessEngine
             return gameBoard;
         }
 
-        public bool makeMove(String move)
+        public bool makeMove(Move move)
+        {
+            bool rv = (move == null) ? false : makeMove(move.getUCIMoveStr());
+            return rv;
+        }
+
+
+            public bool makeMove(String move)
         {
             bool validMove = false;
             HttpStatusCode res = HttpStatusCode.Unused;
@@ -1239,6 +1268,27 @@ namespace ChessEngine
         public static int rookScore = 7;
         public static int queenScore = 9;
         public static int kingScore = 1000;
+
+
+        public static Move makeMoveFromBoard(Board board, ChessmanColor color)
+        {
+            Move bestMove = null;
+
+            List<Move> moveList = board.getAllAvailableMovesForPlayer(color);
+
+            if (moveList.Count > 0)
+            {
+                Random rand = new Random();
+                moveList.Sort();
+                int highestScore = moveList[0].score;
+                List<Move> highestScoreList = moveList.Where(c => c.score == highestScore).ToList();
+
+                bestMove = highestScoreList[rand.Next(highestScoreList.Count)];
+            }
+
+            return bestMove;
+        }
+
     }
 
 }
