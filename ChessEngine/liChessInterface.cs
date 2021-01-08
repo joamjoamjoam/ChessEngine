@@ -155,7 +155,7 @@ namespace ChessEngine
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    if (boardState[row,col].piece != null && boardState[row, col].piece.GetType() != typeof(King) && boardState[row, col].piece.color != color && boardState[row, col].piece.getAvailableMoves(this).Where(m => m.toSpace == (( color == ChessmanColor.white) ? whiteKingPos : blackKingPos)).Count() > 0)
+                    if (boardState[row,col].piece != null && /*boardState[row, col].piece.GetType() != typeof(King) &&*/ boardState[row, col].piece.color != color && boardState[row, col].piece.getAvailableMoves(this).Where(m => m.toSpace == (( color == ChessmanColor.white) ? whiteKingPos : blackKingPos)).Count() > 0)
                     {
                         if (color == ChessmanColor.white) {
                             attacksOnWhiteKing.Add(boardState[row, col].piece);
