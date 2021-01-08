@@ -19,11 +19,50 @@ namespace ChessEngine
         public int score = -1;
         public ChessmanColor color = ChessmanColor.white;
 
-
-
-
         public abstract List<Move> getAvailableMoves(Board boardState);
         public abstract Image getImage();
+
+        public static List<Move> getCheckBlockingMoves(Board boardState, List<Move> possibleMoves, ChessmanColor color)
+        {
+            List<Move> validMoveList = new List<Move>();
+            List<Move> checkingMoves = boardState.getAttackingMovesOnKing(color);
+
+            foreach (Move mv in checkingMoves)
+            {
+                foreach (Move pm in possibleMoves)
+                {
+                    if (mv.toSpace == pm.toSpace) // can Sacrafice Life for King
+                    {
+                        validMoveList.Add(mv);
+                    }
+                }
+
+            }
+
+            // Also Add in Moves that can Kill All Attackers
+            if (checkingMoves.Count == 1)
+            {
+                // TODO Handle Killing an attacker also blocking other attackers.
+
+                // Only handling single attackers for now.
+
+                foreach (Move mv in checkingMoves)
+                {
+                    foreach (Move pm in possibleMoves)
+                    {
+                        if (mv.fromSpace == pm.toSpace) // can Kill Lone Attacker on King
+                        {
+                            validMoveList.Add(mv);
+                        }
+                    }
+
+                }
+
+            }
+
+
+            return checkingMoves;
+        }
 
     }
 
@@ -87,62 +126,66 @@ namespace ChessEngine
             int numMoves = (canMoveTwice) ? 2 : 1;
             BoardSpace toPos = null;
 
-            if (!boardState.isKingInCheck(color))
+            // Normal Moves
+
+            // First Move
+            for (int i = 1; i <= numMoves; i++)
             {
-                // Normal Moves
+                toPos = boardState.getSpace(Convert.ToChar(position.position.Item1), (color == ChessmanColor.white) ? position.position.Item2 + i : position.position.Item2 - i);
 
-                // First Move
-                for (int i = 1; i <= numMoves; i++)
+                if (toPos != null)
                 {
-                    toPos = boardState.getSpace(Convert.ToChar(position.position.Item1), (color == ChessmanColor.white) ? position.position.Item2 + i : position.position.Item2 - i);
-
-                    if (toPos != null)
+                    if (toPos.piece == null)
                     {
-                        if (toPos.piece == null)
-                        {
-                            Move newMove = new Move(this, position, toPos, boardState, 0);
+                        Move newMove = new Move(this, position, toPos, boardState, 0);
 
-                            // Is A Promoting Move
-                            if ((color == ChessmanColor.white) ? (toPos.position.Item2 == 8) : (toPos.position.Item2 == 1))
-                            {
-                                newMove.score = AIWeights.queenScore;
-                            }
-
-                            validMoveList.Add(newMove);
-                        }
-                        else
+                        // Is A Promoting Move
+                        if ((color == ChessmanColor.white) ? (toPos.position.Item2 == 8) : (toPos.position.Item2 == 1))
                         {
-                            break;
+                            newMove.score = AIWeights.queenScore;
                         }
 
+                        validMoveList.Add(newMove);
                     }
                     else
                     {
-                        continue;
+                        break;
                     }
 
                 }
-
-                // Attacking Moves
-                toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
-                BoardSpace toPos2 = boardState.getSpace(Convert.ToChar(position.position.Item1 - 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
-                List<BoardSpace> possibleMoves = new List<BoardSpace>() { toPos, toPos2 };
-                foreach (BoardSpace space in possibleMoves)
+                else
                 {
-                    if (space != null)
-                    {
-                        if (space != null && space.piece != null && space.piece.color == Helper.getOpponentColor(color))
-                        {
-                            validMoveList.Add(new Move(this, position, space, boardState, ((space.piece.color == Helper.getOpponentColor(color)) ? space.piece.score : 0)));
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                    }
+                    continue;
                 }
 
-                // Amend Scores for Pieces that Are now attacking this piece
+            }
+
+            // Attacking Moves
+            toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
+            BoardSpace toPos2 = boardState.getSpace(Convert.ToChar(position.position.Item1 - 1), (color == ChessmanColor.white) ? position.position.Item2 + 1 : position.position.Item2 - 1);
+            List<BoardSpace> possibleMoves = new List<BoardSpace>() { toPos, toPos2 };
+            foreach (BoardSpace space in possibleMoves)
+            {
+                if (space != null)
+                {
+                    if (space != null && space.piece != null && space.piece.color == Helper.getOpponentColor(color))
+                    {
+                        validMoveList.Add(new Move(this, position, space, boardState, ((space.piece.color == Helper.getOpponentColor(color)) ? space.piece.score : 0)));
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+            }
+
+            // Amend Scores for Pieces that Are now attacking this piece
+
+            if (boardState.isKingInCheck(color))
+            {
+                List<Move> afterCheckMoveList = getCheckBlockingMoves(boardState, validMoveList, color);
+                validMoveList.Clear();
+                validMoveList.AddRange(afterCheckMoveList);
             }
 
             return validMoveList;
@@ -233,30 +276,34 @@ namespace ChessEngine
             // Get Valid Moves
             BoardSpace toPos = null;
 
-            if (!boardState.isKingInCheck(color))
+            for (int x = -2; x <= 2; x++)
             {
-                for (int x = -2; x <= 2; x++)
+                for (int y = -2; y <= 2; y++)
                 {
-                    for (int y = -2; y <= 2; y++)
+                    if (x != 0 && y != 0 && (Math.Abs(x) != Math.Abs(y)))
                     {
-                        if (x != 0 && y != 0 && (Math.Abs(x) != Math.Abs(y)))
-                        {
-                            toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + x), position.position.Item2 + y);
+                        toPos = boardState.getSpace(Convert.ToChar(position.position.Item1 + x), position.position.Item2 + y);
 
-                            if (toPos != null)
+                        if (toPos != null)
+                        {
+                            if (toPos.piece == null || toPos.piece.color != color)
                             {
-                                if (toPos.piece == null || toPos.piece.color != color)
-                                {
-                                    Move newMove = new Move(this, position, toPos, boardState, (toPos.piece == null) ? 0 : toPos.piece.score);
-                                    validMoveList.Add(newMove);
-                                }
+                                Move newMove = new Move(this, position, toPos, boardState, (toPos.piece == null) ? 0 : toPos.piece.score);
+                                validMoveList.Add(newMove);
                             }
                         }
                     }
                 }
-
-                // Amend Scores for Pieces that Are now attacking this piece
             }
+
+            // Amend Scores for Pieces that Are now attacking this piece
+            if (boardState.isKingInCheck(color))
+            {
+                List<Move> afterCheckMoveList = getCheckBlockingMoves(boardState, validMoveList, color);
+                validMoveList.Clear();
+                validMoveList.AddRange(afterCheckMoveList);
+            }
+
 
             return validMoveList;
         }
@@ -347,111 +394,114 @@ namespace ChessEngine
 
             // Get Valid Moves
 
-            if (!boardState.isKingInCheck(color))
+            //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
+            char col = Convert.ToChar(position.position.Item1);
+            int row = position.position.Item2 + 1;
+
+            for (; row <= 8; row++)
             {
-                //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
-                char col = Convert.ToChar(position.position.Item1);
-                int row = position.position.Item2 + 1;
-
-                for (; row <= 8; row++)
+                // increasing Row
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
                 {
-                    // increasing Row
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
 
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
+            }
 
-                col = Convert.ToChar(position.position.Item1);
-                row = position.position.Item2 - 1;
-                for (; row >= 1; row--)
+            col = Convert.ToChar(position.position.Item1);
+            row = position.position.Item2 - 1;
+            for (; row >= 1; row--)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
                 {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
 
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
+            }
 
-                col = Convert.ToChar(position.position.Item1 + 1);
-                row = position.position.Item2;
-                for (; col <= 'H'; col++)
+            col = Convert.ToChar(position.position.Item1 + 1);
+            row = position.position.Item2;
+            for (; col <= 'H'; col++)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
                 {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
 
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
+            }
 
-                col = Convert.ToChar(position.position.Item1 - 1);
-                row = position.position.Item2;
-                for (; col >= 'A'; col--)
+            col = Convert.ToChar(position.position.Item1 - 1);
+            row = position.position.Item2;
+            for (; col >= 'A'; col--)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
                 {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
 
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
+            }
 
-                // Amend Scores for Pieces that Are now attacking this piece
+            // Amend Scores for Pieces that Are now attacking this piece
+            if (boardState.isKingInCheck(color))
+            {
+                List<Move> afterCheckMoveList = getCheckBlockingMoves(boardState, validMoveList, color);
+                validMoveList.Clear();
+                validMoveList.AddRange(afterCheckMoveList);
             }
 
             return validMoveList;
@@ -530,124 +580,128 @@ namespace ChessEngine
             }
 
         }
+
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
             return getMovesForBishop(boardState, color, position);
         }
 
+
         public static List<Move> getMovesForBishop(Board boardState, ChessmanColor color, BoardSpace position)
         {
             List<Move> validMoveList = new List<Move>();
 
-            // Get Valid Moves
-            BoardSpace toPos = null;
+            //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
+            char col = Convert.ToChar(position.position.Item1 + 1);
+            int row = position.position.Item2 + 1;
 
-            if (!boardState.isKingInCheck(color))
+            for (; row <= 8 && col <= 'H'; row++, col++)
             {
-                //Starting At Inital Position moves the 4 directions until the board is gone or a piece is reached
-                char col = Convert.ToChar(position.position.Item1 + 1);
-                int row = position.position.Item2 + 1;
-
-                for ( ; row <= 8 && col <= 'H'; row++, col++)
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
                 {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
+
+                    if (moveSpace.piece == null)
                     {
-                        
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
-
-                col = Convert.ToChar(position.position.Item1 - 1);
-                row = position.position.Item2 - 1;
-                for (; row >= 1 && col >= 'A'; row--, col--)
-                {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
-
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                col = Convert.ToChar(position.position.Item1 + 1);
-                row = position.position.Item2 - 1;
-                for (; row >= 1 && col <= 'H'; row--, col++)
-                {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
-
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                col = Convert.ToChar(position.position.Item1 - 1);
-                row = position.position.Item2 + 1;
-                for (; row <= 8 && col >= 'A'; row++, col--)
-                {
-                    // increasing Diagonal
-                    BoardSpace moveSpace = boardState.getSpace(col, row);
-                    if (moveSpace != null)
-                    {
-
-                        if (moveSpace.piece == null)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
-                        }
-                        else if (moveSpace.piece.color != color)
-                        {
-                            validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
-                            break;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                // Amend Scores for Pieces that Are now attacking this piece
             }
+
+            col = Convert.ToChar(position.position.Item1 - 1);
+            row = position.position.Item2 - 1;
+            for (; row >= 1 && col >= 'A'; row--, col--)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
+                {
+
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            col = Convert.ToChar(position.position.Item1 + 1);
+            row = position.position.Item2 - 1;
+            for (; row >= 1 && col <= 'H'; row--, col++)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
+                {
+
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            col = Convert.ToChar(position.position.Item1 - 1);
+            row = position.position.Item2 + 1;
+            for (; row <= 8 && col >= 'A'; row++, col--)
+            {
+                // increasing Diagonal
+                BoardSpace moveSpace = boardState.getSpace(col, row);
+                if (moveSpace != null)
+                {
+
+                    if (moveSpace.piece == null)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, 0));
+                    }
+                    else if (moveSpace.piece.color != color)
+                    {
+                        validMoveList.Add(new Move(position.piece, position, moveSpace, boardState, moveSpace.piece.score));
+                        break;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            // Amend Scores for Pieces that Are now attacking this piece
+            if (boardState.isKingInCheck(color))
+            {
+                List<Move> afterCheckMoveList = getCheckBlockingMoves(boardState, validMoveList, color);
+                validMoveList.Clear();
+                validMoveList.AddRange(afterCheckMoveList);
+            }
+
 
             return validMoveList;
         }
@@ -728,14 +782,20 @@ namespace ChessEngine
 
         public override List<Move> getAvailableMoves(Board boardState)
         {
-            List<Move> validMovesList = new List<Move>();
-            if (!boardState.isKingInCheck(color))
+            List<Move> validMoveList = new List<Move>();
+
+
+            validMoveList.AddRange(Bishop.getMovesForBishop(boardState, color, position));
+            validMoveList.AddRange(Rook.getMovesForRook(boardState, color, position));
+            // Amend Score for Pieces now attacking this piece
+            if (boardState.isKingInCheck(color))
             {
-                validMovesList.AddRange(Bishop.getMovesForBishop(boardState, color, position));
-                validMovesList.AddRange(Rook.getMovesForRook(boardState, color, position));
+                List<Move> afterCheckMoveList = getCheckBlockingMoves(boardState, validMoveList, color);
+                validMoveList.Clear();
+                validMoveList.AddRange(afterCheckMoveList);
             }
 
-            return validMovesList;
+            return validMoveList;
         }
 
         public override Image getImage()
@@ -817,6 +877,8 @@ namespace ChessEngine
 
         }
 
+
+
         public override List<Move> getAvailableMoves(Board boardState)
         {
             List<Move> validMoveList = new List<Move>();
@@ -825,8 +887,7 @@ namespace ChessEngine
             BoardSpace toPos = null;
 
 
-            // Then handle White Games not showing valid moves correctly
-            // Normal Moves
+            // The King Has the Same Moveset whether it is in check or not 
 
             // First Move
             for (int x = -1; x <= 1; x++)

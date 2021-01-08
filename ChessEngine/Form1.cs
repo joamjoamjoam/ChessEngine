@@ -811,7 +811,7 @@ namespace ChessEngine
                     if (currGame.color == currGame.playerTurn)
                     {
                         Thread.Sleep(2000);
-                        Move bestMove = AIWeights.makeMoveFromBoard(currGame.gameBoard, currGame.color);
+                        Move bestMove = currGame.aiContext.getBestMove();
                         if (bestMove != null)
                         {
                             Debug.WriteLine($"Making Move: {bestMove.ToString()}");

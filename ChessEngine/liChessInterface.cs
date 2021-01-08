@@ -31,8 +31,8 @@ namespace ChessEngine
     public class Board
     {
         BoardSpace[,] boardState = new BoardSpace[8, 8]; //Column, Row
-        List<Chessman> attacksOnWhiteKing = new List<Chessman>();
-        List<Chessman> attacksOnBlackKing = new List<Chessman>();
+        List<Move> attacksOnWhiteKing = new List<Move>();
+        List<Move> attacksOnBlackKing = new List<Move>();
         BoardSpace whiteKingPos = null;
         BoardSpace blackKingPos = null;
 
@@ -114,15 +114,9 @@ namespace ChessEngine
                 }
             }
 
-            foreach (Chessman p in fromBoard.getAttackersOnKing(ChessmanColor.black))
-            {
-                attacksOnBlackKing.Add(this.getSpace(p.position.position.Item1, p.position.position.Item2).piece);
-            }
-
-            foreach (Chessman p in fromBoard.getAttackersOnKing(ChessmanColor.white))
-            {
-                attacksOnWhiteKing.Add(this.getSpace(p.position.position.Item1, p.position.position.Item2).piece);
-            }
+            // Recalculate moves on King
+            updateAttacksOnKing(ChessmanColor.white);
+            updateAttacksOnKing(ChessmanColor.black);
 
             // update attacks arrays
             whiteKingPos = this.getSpace(fromBoard.whiteKingPos.position.Item1, fromBoard.whiteKingPos.position.Item2);
@@ -148,22 +142,32 @@ namespace ChessEngine
 
         public void updateAttacksOnKing(ChessmanColor color)
         {
-            attacksOnBlackKing = new List<Chessman>();
-            attacksOnWhiteKing = new List<Chessman>();
+            attacksOnBlackKing = new List<Move>();
+            attacksOnWhiteKing = new List<Move>();
 
             for (int row = 0; row < 8; row++)
             {
                 for (int col = 0; col < 8; col++)
                 {
-                    if (boardState[row,col].piece != null && /*boardState[row, col].piece.GetType() != typeof(King) &&*/ boardState[row, col].piece.color != color && boardState[row, col].piece.getAvailableMoves(this).Where(m => m.toSpace == (( color == ChessmanColor.white) ? whiteKingPos : blackKingPos)).Count() > 0)
+                    if (boardState[row,col].piece != null && boardState[row, col].piece.GetType() != typeof(King) && boardState[row, col].piece.color != color)
                     {
-                        if (color == ChessmanColor.white) {
-                            attacksOnWhiteKing.Add(boardState[row, col].piece);
-                        }
-                        else
+                        List<Move> checkMoves = boardState[row, col].piece.getAvailableMoves(this).Where(m => m.toSpace == ((color == ChessmanColor.white) ? whiteKingPos : blackKingPos)).ToList();
+
+                        if (checkMoves.Count > 0)
                         {
-                            attacksOnBlackKing.Add(boardState[row, col].piece);
+                            if (color == ChessmanColor.white)
+                            {
+                                attacksOnWhiteKing.AddRange(checkMoves);
+                            }
+                            else
+                            {
+                                attacksOnBlackKing.AddRange(checkMoves);
+                            }
                         }
+                    }
+                    else if (boardState[row, col].piece != null && boardState[row, col].piece.GetType() == typeof(King) && boardState[row, col].piece.color != color)
+                    {
+                        // Add King on King Check Moves if the kigs are close to each other
                     }
                 }
             }
@@ -191,7 +195,7 @@ namespace ChessEngine
             return (color == ChessmanColor.white) ? attacksOnWhiteKing.Count > 0 : attacksOnBlackKing.Count > 0;
         }
 
-        public List<Chessman> getAttackersOnKing(ChessmanColor color)
+        public List<Move> getAttackingMovesOnKing(ChessmanColor color)
         {
             return (color == ChessmanColor.white) ? attacksOnWhiteKing : attacksOnBlackKing;
         }
@@ -531,6 +535,24 @@ namespace ChessEngine
 
         }
 
+        public Move(Move other) // Copy using using Same Reference Board
+        {
+            contextBoard = other.contextBoard;
+            this.toSpace = other.toSpace;
+            this.fromSpace = other.fromSpace;
+            this.score = other.score; // AI Weight
+            piece = other.piece;
+        }
+
+        public Move(Move other, Board newBoard) // copy Using New Reference Board
+        {
+            contextBoard = newBoard;
+            this.toSpace = new BoardSpace(other.toSpace);
+            this.fromSpace = new BoardSpace(other.fromSpace);
+            this.score = other.score; // AI Weight
+            piece = other.toSpace.piece;
+        }
+
         public int CompareTo(Move other)
         {
             return (other.score - this.score);
@@ -788,6 +810,7 @@ namespace ChessEngine
         public Move lastMove = null;
         public GameStatus gameStatus = GameStatus.unknown;
         public ChessmanColor winner = ChessmanColor.none;
+        public AI aiContext = null;
 
         public int whiteClockTime = 0;
         public int blackClockTime = 0;
@@ -809,6 +832,7 @@ namespace ChessEngine
 
         public Game(JObject json, String authToken)
         {
+            aiContext = new AI(this);
             if (json != null)
             {
                 Debug.WriteLine($"Game = {json.ToString()}");
@@ -1258,37 +1282,6 @@ namespace ChessEngine
         {
             return ((playerColor == ChessmanColor.white) ? ChessmanColor.black : ChessmanColor.white);
         }
-    }
-
-    public static class AIWeights
-    {
-        public static int pawnScore = 1;
-        public static int bishopScore = 3;
-        public static int knightScore = 3;
-        public static int rookScore = 7;
-        public static int queenScore = 9;
-        public static int kingScore = 1000;
-
-
-        public static Move makeMoveFromBoard(Board board, ChessmanColor color)
-        {
-            Move bestMove = null;
-
-            List<Move> moveList = board.getAllAvailableMovesForPlayer(color);
-
-            if (moveList.Count > 0)
-            {
-                Random rand = new Random();
-                moveList.Sort();
-                int highestScore = moveList[0].score;
-                List<Move> highestScoreList = moveList.Where(c => c.score == highestScore).ToList();
-
-                bestMove = highestScoreList[rand.Next(highestScoreList.Count)];
-            }
-
-            return bestMove;
-        }
-
     }
 
 }
